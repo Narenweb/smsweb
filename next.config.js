@@ -1,7 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {}
+const nextConfig = {};
 
-module.exports = {
-    distDir: 'custom-build-folder',
-    // other configurations...
-  };
+module.exports = nextConfig;
