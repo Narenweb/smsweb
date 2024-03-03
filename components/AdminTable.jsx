@@ -19,7 +19,7 @@ class BusinessLine {
   }
 }
 
-export default function PartnerTable() {
+export default function AdminTable() {
   const [people, setData] = useState([]);
   const [details, setDetails] = useState(null);
   // const accessToken = localStorage.getItem("accessToken");

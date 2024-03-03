@@ -1,5 +1,5 @@
 "use client"
-import BusinessCategoryTable from '@/components/BussinessCategoryTable'
+import BusinessCategoryTable from '@/components/BusinessCategoryTable'
 import Header from '@/components/Header'
 import SideNav from '@/components/SideNav'
 import {

@@ -22,25 +22,25 @@ export default function Footer() {
             <div className="flex flex-col space-y-7 lg:flex-row lg:space-y-0">
               <a
                 href=""
-                className="font-semibold lg:w-[150px] leading-6 text-white lg:border-r-4 lg:border-primaryColor lg:h-6"
+                className="font-semibold lg:w-[150px] leading-6 text-white lg:border-r-4 lg:border-primaryColor lg:h-6 cursor-pointer"
               >
                 Help & Support
               </a>
               <a
-                href=""
-                className="font-semibold lg:w-[220px] lg:pl-10 leading-6 text-white lg:border-r-4 lg:border-primaryColor lg:h-6"
+                href="/admin/login"
+                className="font-semibold lg:w-[300px] lg:pl-10 leading-6 text-white lg:border-r-4 lg:border-primaryColor lg:h-6 cursor-pointer"
               >
-                Signup As Partner
+                Signup or Login As Partner
               </a>
               <a
                 href=""
-                className="font-semibold lg:w-[230px] lg:pl-10 leading-6 text-white lg:border-r-4 lg:border-primaryColor lg:h-6"
+                className="font-semibold lg:w-[230px] lg:pl-10 leading-6 text-white lg:border-r-4 lg:border-primaryColor lg:h-6 cursor-pointer"
               >
                 Terms & Conditions
               </a>
               <a
                 href=""
-                className="font-semibold leading-6 lg:pl-10  text-white"
+                className="font-semibold leading-6 lg:pl-10  text-white cursor-pointer"
               >
                 Privacy Policy
               </a>

@@ -124,9 +124,13 @@ export default function UserPortal() {
   //     setScreenWidth(window.innerWidth);
   //   }
   // }, []);
+
+  // Conditionally use the location object only in the client-side context
+
   useEffect(() => {
     const handleResize = () => {
-      const newScreenWidth = typeof window !== 'undefined' ? window.innerWidth : null;
+      const newScreenWidth =
+        typeof window !== "undefined" ? window.innerWidth : null;
       setScreenWidth(newScreenWidth);
 
       const newVisibleCount = newScreenWidth >= 768 ? 13 : 5;
@@ -139,11 +143,11 @@ export default function UserPortal() {
     handleResize();
 
     // Add event listener for window resize
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     // Cleanup: remove event listener on component unmount
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, [paragraphs.length]);
 
@@ -162,7 +166,9 @@ export default function UserPortal() {
   // }, []);
   const toggleContent = () => {
     setFullContentVisible(!fullContentVisible);
-    setVisibleCount(fullContentVisible ? (screenWidth >= 768 ? 13 : 5) : paragraphs.length);
+    setVisibleCount(
+      fullContentVisible ? (screenWidth >= 768 ? 13 : 5) : paragraphs.length
+    );
   };
   const [favorites, setFavorites] = useState([]);
 
@@ -178,11 +184,11 @@ export default function UserPortal() {
     <>
       <div className="flex h-full bg-userTheme">
         <div className="flex flex-1 flex-col overflow-hidden">
-          <UserHeader />
+          <UserHeader isLoginPage />
           {/* hero section */}
-          <section className="hero-section w-full h-auto top-0 relative mb-10 sm:mb-20 lg:h-[75%] bg-userTheme">
+          <section className="hero-section w-full  top-0 relative mb-10 sm:mb-28 lg:max-h-[630px] bg-userTheme mt-[65px]">
             <div className="containerBox relative md:left-20 lg:left-32">
-              <div className=" pt-0 flex flex-col mt-36 sm:mt-40 ">
+              <div className=" pt-0 flex flex-col mt-36 sm:mt-20 ">
                 <h1 className=" font-[300] text-dark mb-5 sm:mb-10 sm:w-[55%] text-5xl leading-[1.3]">
                   We set up your space to celebrate your{" "}
                   <span className="font-bold">Birthday Party</span>
@@ -354,7 +360,7 @@ export default function UserPortal() {
               {posts.map((post) => (
                 <article
                   key={post.id}
-                  className="flex flex-col items-start justify-between rounded-lg bg-white lg:w-[332px]"
+                  className="flex flex-col items-start justify-between rounded-lg bg-white lg:w-[332px] shadow-xl"
                 >
                   <div className="relative w-full">
                     <div

@@ -20,6 +20,7 @@ const CustomDropdown = ({
   const handleOptionClick = (option) => {
     onSelect(option);
     setIsOpen(false);
+    console.log("placeholder", placeholder);
   };
 
   // Close the dropdown when clicking outside
@@ -43,11 +44,19 @@ const CustomDropdown = ({
       ref={dropdownRef}
     >
       <div
-        className={`selected-option p-3 rounded-md border-[#E1E1E1] shadow-md  border cursor-pointer w-[80%] relative  ${styles}`}
+        className={`selected-option p-3 rounded-lg border-[#E1E1E1] shadow-md border cursor-pointer w-[80%] relative  ${styles}`}
         onClick={handleToggle}
       >
-        <div className="border-r absolute top-3 right-10 border-[#E1E1E1]  opacity-[0.6] w-3 h-6"></div>
-        {selectedOption ? selectedOption.label : placeholder}
+        <div className="border-r absolute top-3 right-10 border-[#E1E1E1] opacity-[0.6] w-3 h-6"></div>
+        <span
+          style={
+            selectedOption && selectedOption.label ? {} : { color: "grey" }
+          }
+        >
+          {selectedOption && selectedOption.label
+            ? selectedOption.label
+            : placeholder}
+        </span>
         <ChevronDownIcon
           className={`ml-2 transform absolute top-3 w-[25px] right-2 text-gray-400 opacity-[0.7] ${
             isOpen ? "rotate-180" : "rotate-0"
@@ -62,7 +71,7 @@ const CustomDropdown = ({
         {options.map((opt) => (
           <div
             key={opt.value}
-            className="px-2 py-1 cursor-pointer text-black hover:bg-lightTheme hover:text-white"
+            className="px-2 py-1 cursor-pointer text-black hover:bg-theme hover:text-white rounded-md"
             onClick={() => handleOptionClick(opt)}
           >
             {opt.label}

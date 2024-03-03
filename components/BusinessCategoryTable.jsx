@@ -42,25 +42,21 @@ class BusinessLineResponse {
     );
   }
 }
-export default function BusinessKindTable() {
+export default function BusinessCategoryTable() {
   const [people, setData] = useState([]);
   const [details, setDetails] = useState(null);
   const [businessLineNamesMap, setBusinessLineNamesMap] = useState({});
   // const accessToken = localStorage.getItem("accessToken");
-  const [accessToken, setAccessToken] = useState({});
   const [businessKindOptions, setBusinessKindOptions] = useState([]);
+  const [accessToken, setAccessToken] = useState({});
+  const [selectedBusinessCategory, setSelectedBusinessCategory] =
+    useState(null);
   const router = useRouter();
+
   const checkAuthentication = () => {
     const isAuthenticated = Boolean(localStorage.getItem("accessToken"));
     return isAuthenticated;
   };
-  const handleForceReload = () => {
-    window.location.reload();
-  };
-  const businessLineOptions = Object.keys(businessLineNamesMap).map((blId) => ({
-    label: businessLineNamesMap[blId],
-    value: blId,
-  }));
 
   useEffect(() => {
     // Check if running on the client side
@@ -71,11 +67,26 @@ export default function BusinessKindTable() {
       setAccessToken(storedAccessToken);
     }
   }, []);
-  //businessCategory
+
+  useEffect(() => {
+    fetchData();
+    setIsAddRowOpen(false);
+    const isAuthenticated = checkAuthentication();
+    if (!isAuthenticated) {
+      router.push("/admin/login");
+    }
+  }, [accessToken]);
+  const handleForceReload = () => {
+    window.location.reload();
+  };
+  const businessLineOptions = Object.keys(businessLineNamesMap).map((blId) => ({
+    label: businessLineNamesMap[blId],
+    value: blId,
+  }));
   const fetchBusinessKindOptions = async (selectedBlId) => {
     try {
       const response = await fetch(
-        `${config.host}/tenant/admin/v2/business/category/all?blId=${selectedBlId}`,
+        `${config.host}/tenant/admin/v2/business/kind/all?blId=${selectedBlId}`,
 
         {
           method: "GET",
@@ -91,17 +102,15 @@ export default function BusinessKindTable() {
         console.log("API Response:", data);
 
         // Use the businessKindList with filtering based on selectedBlId
-        const options = data.serviceResponse.businessCategoryList
-          .filter((category) => category.blId === selectedBlId)
+        const options = data.serviceResponse.businessKindList
+          .filter((kind) => kind.blId === selectedBlId)
           .map((kind) => ({
             label: kind.name,
             value: kind.name,
             blId: kind.blId,
-            bcId: kind.bcId,
+            bkId: kind.bkId,
           }));
         console.log("Options:", options);
-        const labels = options.map((option) => option.label);
-        console.log("Labels:", labels);
         setBusinessKindOptions(options);
       } else {
         console.error(
@@ -132,7 +141,7 @@ export default function BusinessKindTable() {
 
       if (businessLineNamesResponse.ok) {
         const businessLineNamesData = await businessLineNamesResponse.json();
-        console.log(businessLineNamesData.serviceResponse.businessLineList);
+        // console.log(businessLineNamesData.serviceResponse.businessLineList)
         const businessLineResponse = new BusinessLineResponse(
           true,
           200,
@@ -159,25 +168,13 @@ export default function BusinessKindTable() {
     }
   };
 
-  // console.log('businessLineNamesMap:', businessLineNamesMap);
-  // console.log('businessLineList:', businessLineNamesMap.businessLineList);
-
-  // const businessLineOptions = businessLineNamesMap
-  //   ? Object.keys(businessLineNamesMap).map((blId) => ({
-  //     label: businessLineNamesMap[blId],
-  //     value: blId,
-  //   }))
-  //   : [];
-
-  // console.log('businessLineOptions:', businessLineOptions);
-
   // Fetch data
   const fetchData = async () => {
     try {
       await fetchBusinessLineNames(); // Fetch business line names once
 
       const response = await fetch(
-        `${config.host}/tenant/admin/v2/business/kind/all`,
+        `${config.host}/tenant/admin/v2/business/category/all`,
         {
           method: "GET",
           headers: {
@@ -191,12 +188,12 @@ export default function BusinessKindTable() {
         const data = await response.json();
 
         // Use businessLineNamesMap where needed
-        const updatedData = data.serviceResponse.businessKindList.map(
+        const updatedData = data.serviceResponse.businessCategoryList.map(
           (item) => {
             const businessLineName = businessLineNamesMap[item.blId] || "N/A";
             return {
               ...item,
-              id: item.bkId,
+              id: item.bcId,
               businessLineName,
             };
           }
@@ -204,7 +201,7 @@ export default function BusinessKindTable() {
 
         setData(updatedData);
 
-        const toggleStates = data.serviceResponse.businessKindList.map(
+        const toggleStates = data.serviceResponse.businessCategoryList.map(
           (item) => ({
             enable: item.enable,
             active: item.active,
@@ -220,15 +217,6 @@ export default function BusinessKindTable() {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-    setIsAddRowOpen(false);
-    const isAuthenticated = checkAuthentication();
-    if (!isAuthenticated) {
-      router.push("/admin/login");
-    }
-  }, [accessToken]);
-
   const [editRow, setEditRow] = useState(null);
   const [isAddRowOpen, setIsAddRowOpen] = useState(false);
   const [toggleStates, setToggleStates] = useState(
@@ -238,6 +226,384 @@ export default function BusinessKindTable() {
   const handleAddRowToggle = () => {
     setIsAddRowOpen(!isAddRowOpen);
   };
+
+  const handleToggle = (bcId, field, value) => {
+    console.log("Toggling", { bcId, field, value });
+  };
+
+  const handleMainToggle = async (bcId, field, value) => {
+    try {
+      // Make API request to update the specified field (enable or active) for the business kind
+      const response = await fetch(
+        `${config.host}/tenant/admin/v2/business/category/${bcId}`,
+        {
+          method: "PUT", // Use PATCH method for partial updates
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ [field]: value }),
+        }
+      );
+
+      if (response.ok) {
+        // Update the UI state (toggle state) if the API request is successful
+        setToggleStates((prevStates) => {
+          const index = prevStates.findIndex((state) => state.bcId === bcId);
+          if (index !== -1) {
+            const updatedState = { ...prevStates[index], [field]: value };
+            const updatedStates = [...prevStates];
+            updatedStates[index] = updatedState;
+            return updatedStates;
+          }
+
+          console.log(prevStates);
+          fetchData();
+          return [...prevStates];
+        });
+        // const work=await handleUpdate(bkId, 'enable', value);
+        // console.log(work)
+      } else {
+        console.error("Failed to update business category:", response.status);
+      }
+    } catch (error) {
+      console.error("Error updating business category:", error.message);
+    }
+  };
+
+  const fetchBusinessKind = async () => {
+    try {
+      const response = await fetch(
+        `${config.host}/tenant/admin/v2/business/kind/all`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.serviceResponse.businessKindList;
+      } else {
+        console.error("Failed to fetch business categories:", response.status);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching business categories:", error.message);
+      return [];
+    }
+  };
+  //Edit component
+  const handleEdit = async (row) => {
+    try {
+      // Fetch business categories
+      const businessKind = await fetchBusinessKind();
+
+      // Make a GET request to fetch the detailed information for the business kind
+      const response = await fetch(
+        `${config.host}/tenant/admin/v2/business/category/${row.id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const businessKindDetails = await response.json();
+
+        // Map bcId to corresponding names
+        const bkIdToNameMap = businessKind.reduce((map, kind) => {
+          map[kind.bkId] = kind.name;
+          return map;
+        }, {});
+
+        // Check if bcIds is not null before mapping
+        const bkIds = businessKindDetails.serviceResponse.bkIds || [];
+
+        // Use the updated data from the API response
+        const businessLineOption = businessLineOptions.find(
+          (option) => option.value === businessKindDetails.serviceResponse.blId
+        );
+
+        if (businessLineOption) {
+          const businessLineName = businessLineOption.label || "N/A";
+          const businessLineId = businessLineOption.value || "N/A";
+
+          // Set EditRow state
+          setEditRow({
+            ...row,
+            blId: businessLineOption.value,
+            businessLine: businessLineName,
+            businessLineId: businessLineId,
+            bkIds: bkIds,
+            bkNames: bkIds.map((bcId) => bkIdToNameMap[bcId] || "N/A"),
+            // Use bcIds from the API response
+          });
+
+          // Log bcIds and bcNames
+          console.log("bkIds", bkIds);
+          console.log(
+            "bkNames",
+            bkIds.map((bcId) => bcIdToNameMap[bcId] || "N/A")
+          );
+
+          // Update ToggleStates
+          setToggleStates((prevStates) =>
+            prevStates.map((state, i) =>
+              i === row.id - 1
+                ? { ...state, enable: row.enable, active: row.active }
+                : state
+            )
+          );
+        } else {
+          console.error(
+            "Invalid business line ID during edit:",
+            businessKindDetails.serviceResponse.blId
+          );
+        }
+      } else {
+        // Handle error
+        console.error(
+          "Failed to fetch business kind details:",
+          response.status
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching business kind details:", error.message);
+    }
+  };
+
+  //Edit Row
+  const updateBusinessCategory = async (bcId, blId, updatedData) => {
+    try {
+      console.log("businessLineOptions:", businessLineOptions);
+      const response = await fetch(
+        `${config.host}/tenant/admin/v2/business/category/${bcId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+
+      if (response.ok) {
+        // Business kind updated successfully
+        const updateBusinessCategory = await response.json();
+        console.log(
+          "Active in response:",
+          updateBusinessCategory.serviceResponse.active
+        );
+        console.log("API Response:", updateBusinessCategory);
+        // Update the local state immediately
+        setData((prevData) =>
+          prevData.map((row) =>
+            row.id === updateBusinessCategory.serviceResponse.id
+              ? {
+                  ...row,
+                  ...updateBusinessCategory.serviceResponse,
+                  enable: updateBusinessCategory.serviceResponse.enable, // Set enable based on the API response
+                  active: updateBusinessCategory.serviceResponse.active, // Set active based on the API response
+                  businessLine:
+                    businessLineOptions.find(
+                      (option) =>
+                        option.value ===
+                        updateBusinessCategory.serviceResponse.blId
+                    )?.label || "N/A",
+                }
+              : row
+          )
+        );
+
+        setToggleStates((prevStates) =>
+          prevStates.map((state) =>
+            state.bcId === bcId
+              ? {
+                  ...state,
+                  enable: updateBusinessCategory.serviceResponse.enable, // Set enable based on the API response
+                  active: updateBusinessCategory.serviceResponse.active, // Set active based on the API response
+                  [field]: value,
+                }
+              : state
+          )
+        );
+
+        console.log(
+          "blId in response:",
+          updateBusinessCategory.serviceResponse.blId
+        );
+        console.log(
+          "Mapped label:",
+          businessLineOptions.find(
+            (option) =>
+              option.value === updateBusinessCategory.serviceResponse.blId
+          )?.label
+        );
+
+        // Close the editing mode (if any)
+        setEditRow(null);
+      } else {
+        // Handle error
+        console.error("Failed to update business category:", response.status);
+      }
+    } catch (error) {
+      console.error("Error updating business category:", error.message);
+    }
+  };
+  const extractSelectedOptions = (bkIds) => {
+    return bkIds ? bkIds.map((option) => option.bkId) : [];
+  };
+  // const handleUpdate = async (
+  //   id,
+  //   updatedName,
+  //   updatedBusinessLine,
+  //   enable,
+  //   active,
+  //   selectedBusinessCategory,
+  //   bkNames
+  // ) => {
+  //   console.log("id:", id);
+  //   console.log("updatedBusinessLine:", updatedBusinessLine);
+
+  //   // Find the corresponding businessLineOption for the updatedBusinessLine
+  //   const businessLineOption = businessLineOptions.find(
+  //     (option) => option.label === updatedBusinessLine
+  //   );
+
+  //   // Ensure that businessLineOption is found before proceeding
+  //   if (businessLineOption) {
+  //     const existingBusinessKind = await response.json();
+  //     const existingBcIds = existingBusinessKind.serviceResponse.bcIds || [];
+  //     const updatedData = {
+  //       name: updatedName,
+  //       blId: businessLineOption.value,
+  //       enable,
+  //       active,
+  //       bkIds: extractSelectedOptions(selectedBusinessCategory),
+  //       bkNames:
+  //         selectedBusinessCategory.map((option) => option.label) || bkNames,
+  //     };
+
+  //     // Update the local state immediately
+  //     setData((prevData) =>
+  //       prevData.map((row) =>
+  //         row.id === id
+  //           ? {
+  //               ...row,
+  //               ...updatedData,
+  //             }
+  //           : row
+  //       )
+  //     );
+  //     //Main table toggle
+  //     await handleMainToggle(id, "enable", enable);
+  //     // setTimeout(() => {
+  //     //   handleForceReload()
+  //     // }, 500)
+  //     // Update the businessKind using the correct blId, enable, and active
+  //     await updateBusinessCategory(id, businessLineOption.value, updatedData);
+
+  //     // Close the editing mode (if any)
+  //     setEditRow(null);
+  //   } else {
+  //     console.error(
+  //       "Invalid business line during update:",
+  //       updatedBusinessLine
+  //     );
+  //   }
+  // };
+  //2
+  const handleUpdate = async (
+    id,
+    updatedName,
+    updatedBusinessLine,
+    enable,
+    active,
+    selectedBusinessCategory,
+    bkNames
+  ) => {
+    console.log("id:", id);
+    console.log("updatedBusinessLine:", updatedBusinessLine);
+    console.log("updatedBusinessLine:", updatedBusinessLine);
+
+    // Find the corresponding businessLineOption for the updatedBusinessLine
+    const businessLineOption = businessLineOptions.find(
+      (option) => option.label === updatedBusinessLine
+    );
+
+    if (businessLineOption) {
+      // Fetch the existing bcIds from the API response
+      const response = await fetch(
+        `${config.host}/tenant/admin/v2/business/category/${id}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const existingBusinessKind = await response.json();
+        const existingBcIds = existingBusinessKind.serviceResponse.bkIds || [];
+
+        // Concatenate the existing bcIds with the new ones
+        const updatedData = {
+          name: updatedName,
+          blId: businessLineOption.value,
+          enable,
+          active,
+          bkIds: [
+            ...extractSelectedOptions(selectedBusinessCategory),
+            ...existingBcIds,
+          ],
+          bkNames:
+            selectedBusinessCategory.map((option) => option.label) || bkNames,
+        };
+
+        // Update the local state immediately
+        setData((prevData) =>
+          prevData.map((row) =>
+            row.id === id
+              ? {
+                  ...row,
+                  ...updatedData,
+                }
+              : row
+          )
+        );
+
+        // Update the businessKind using the correct blId, enable, and active
+        //Main table toggle
+        await handleMainToggle(id, "enable", enable);
+        // setTimeout(() => {
+        //   handleForceReload()
+        // }, 500)
+        await updateBusinessCategory(id, businessLineOption.value, updatedData);
+
+        // Close the editing mode (if any)
+        setEditRow(null);
+      } else {
+        console.error(
+          "Failed to fetch business kind details:",
+          response.status
+        );
+      }
+    } else {
+      console.error(
+        "Invalid business line during update:",
+        updatedBusinessLine
+      );
+    }
+  };
+  //Add Row
 
   const handleAdd = async (newRow) => {
     try {
@@ -257,11 +623,11 @@ export default function BusinessKindTable() {
       newRow.blId = selectedBusinessLine.value;
 
       console.log("Before API Call local - newRow:", newRow);
-      console.log("enable from local row", newRow.enable);
-      console.log("active from local row", newRow.active);
+      console.log("enable from newRow before", newRow.enable);
+      console.log("active from newRow before", newRow.active);
 
       const response = await fetch(
-        `${config.host}/tenant/admin/v2/business/kind`,
+        `${config.host}/tenant/admin/v2/business/category`,
         {
           method: "POST",
           headers: {
@@ -274,7 +640,7 @@ export default function BusinessKindTable() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("API Response Data:", data.serviceResponse);
+        console.log("After updating API Response Data:", data.serviceResponse);
         // Set toggleStates based on the extracted values
         setToggleStates((prevStates) => [
           ...prevStates,
@@ -326,14 +692,15 @@ export default function BusinessKindTable() {
       const businessLineOption = businessLineOptions.find(
         (option) => option.label === businessLine
       );
-      const bcIds = selectedOptions
-        ? selectedOptions.map((option) => option.bcId)
-        : [];
+
       if (businessLineOption) {
+        const bkIds = selectedOptions
+          ? selectedOptions.map((option) => option.bkId)
+          : [];
         const newRow = {
           name,
           businessLine: businessLineOption.label,
-          bcIds,
+          bkIds,
           blId: businessLineOption.value,
           enable,
           active,
@@ -343,7 +710,6 @@ export default function BusinessKindTable() {
         // const selectedBkIds = businessCategory.map((category) => category.bkId);
         // console.log('Selected BK IDs:', selectedBkIds);
         // newRow.bkIds = selectedBkIds;
-
         console.log("Business Kind Options:", businessKindOptions);
         await handleAdd(newRow);
         setEditRow(null);
@@ -351,357 +717,27 @@ export default function BusinessKindTable() {
         console.error("Invalid business line during add:", businessLine);
       }
     } catch (error) {
-      console.error("Error adding business kind:", error.message);
+      console.error("Error adding business category:", error.message);
     }
   };
 
   const handleAddToggle = (field, value) => {
     console.log("Add Toggling", { field, value });
+    // Handle toggling logic here if needed
   };
-
-  const handleToggle = (bkId, field, value) => {
-    console.log("Toggling", { bkId, field, value });
-    // setToggleStates((prevStates) => {
-    //   const updatedStates = prevStates.map((state) => {
-    //     if (state.bkId === bkId) { // Adapt this line based on the actual structure
-    //       return { ...state, [field]: value };
-    //     }
-
-    //     return state;
-    //   });
-
-    //   return updatedStates;
-    // });
-  };
-
-  const handleMainToggle = async (bkId, field, value) => {
+  const handleShowSideNav = async (bcId, index) => {
     try {
-      // Make API request to update the specified field (enable or active) for the business kind
-      const response = await fetch(
-        `${config.host}/tenant/admin/v2/business/kind/${bkId}`,
-        {
-          method: "PUT", // Use PATCH method for partial updates
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ [field]: value }),
-        }
-      );
+      const businessCategoryId = people.find(
+        (person) => person.bcId === bcId
+      )?.id;
 
-      if (response.ok) {
-        // Update the UI state (toggle state) if the API request is successful
-        setToggleStates((prevStates) => {
-          const index = prevStates.findIndex((state) => state.bkId === bkId);
-          if (index !== -1) {
-            const updatedState = { ...prevStates[index], [field]: value };
-            const updatedStates = [...prevStates];
-            updatedStates[index] = updatedState;
-            return updatedStates;
-          }
-
-          console.log(prevStates);
-          fetchData();
-          return [...prevStates];
-        });
-        // const work=await handleUpdate(bkId, 'enable', value);
-        // console.log(work)
-      } else {
-        console.error("Failed to update business kind:", response.status);
-      }
-    } catch (error) {
-      console.error("Error updating business kind:", error.message);
-    }
-  };
-  // Fetch business categories
-  const fetchBusinessCategories = async () => {
-    try {
-      const response = await fetch(
-        `${config.host}/tenant/admin/v2/business/category/all`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        return data.serviceResponse.businessCategoryList;
-      } else {
-        console.error("Failed to fetch business categories:", response.status);
-        return [];
-      }
-    } catch (error) {
-      console.error("Error fetching business categories:", error.message);
-      return [];
-    }
-  };
-
-  const handleEdit = async (row) => {
-    try {
-      // Fetch business categories
-      const businessCategories = await fetchBusinessCategories();
-
-      // Make a GET request to fetch the detailed information for the business kind
-      const response = await fetch(
-        `${config.host}/tenant/admin/v2/business/kind/${row.id}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const businessKindDetails = await response.json();
-
-        // Map bcId to corresponding names
-        const bcIdToNameMap = businessCategories.reduce((map, category) => {
-          map[category.bcId] = category.name;
-          return map;
-        }, {});
-
-        // Check if bcIds is not null before mapping
-        const bcIds = businessKindDetails.serviceResponse.bcIds || [];
-
-        // Use the updated data from the API response
-        const businessLineOption = businessLineOptions.find(
-          (option) => option.value === businessKindDetails.serviceResponse.blId
-        );
-
-        if (businessLineOption) {
-          const businessLineName = businessLineOption.label || "N/A";
-          const businessLineId = businessLineOption.value || "N/A";
-
-          // Set EditRow state
-          setEditRow({
-            ...row,
-            blId: businessLineOption.value,
-            businessLine: businessLineName,
-            businessLineId: businessLineId,
-            bcIds: bcIds,
-            bcNames: bcIds.map((bcId) => bcIdToNameMap[bcId] || "N/A"),
-            // Use bcIds from the API response
-          });
-
-          // Log bcIds and bcNames
-          console.log("bcIds", bcIds);
-          console.log(
-            "bcNames",
-            bcIds.map((bcId) => bcIdToNameMap[bcId] || "N/A")
-          );
-
-          // Update ToggleStates
-          setToggleStates((prevStates) =>
-            prevStates.map((state, i) =>
-              i === row.id - 1
-                ? { ...state, enable: row.enable, active: row.active }
-                : state
-            )
-          );
-        } else {
-          console.error(
-            "Invalid business line ID during edit:",
-            businessKindDetails.serviceResponse.blId
-          );
-        }
-      } else {
-        // Handle error
-        console.error(
-          "Failed to fetch business kind details:",
-          response.status
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching business kind details:", error.message);
-    }
-  };
-
-  const updateBusinessKind = async (bkId, blId, updatedData) => {
-    try {
-      console.log("businessLineOptions:", businessLineOptions);
-      const response = await fetch(
-        `${config.host}/tenant/admin/v2/business/kind/${bkId}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedData),
-        }
-      );
-      console.log("updated data", updatedData);
-      if (response.ok) {
-        // Business kind updated successfully
-        const updatedBusinessKind = await response.json();
-        console.log(
-          "Active in response:",
-          updatedBusinessKind.serviceResponse.active
-        );
-        console.log("API Response:", updatedBusinessKind);
-        console.log(
-          "bcIds in response:",
-          updatedBusinessKind.serviceResponse.bcIds
-        );
-        // Update the local state immediately
-        setData((prevData) =>
-          prevData.map((row) =>
-            row.id === updatedBusinessKind.serviceResponse.id
-              ? {
-                  ...row,
-                  ...updatedBusinessKind.serviceResponse,
-                  enable: updatedBusinessKind.serviceResponse.enable, // Set enable based on the API response
-                  active: updatedBusinessKind.serviceResponse.active, // Set active based on the API response
-                  businessLine:
-                    businessLineOptions.find(
-                      (option) =>
-                        option.value ===
-                        updatedBusinessKind.serviceResponse.blId
-                    )?.label || "N/A",
-                }
-              : row
-          )
-        );
-
-        setToggleStates((prevStates) =>
-          prevStates.map((state) =>
-            state.bkId === bkId
-              ? {
-                  ...state,
-                  enable: updatedBusinessKind.serviceResponse.enable, // Set enable based on the API response
-                  active: updatedBusinessKind.serviceResponse.active, // Set active based on the API response
-                  [field]: value,
-                }
-              : state
-          )
-        );
-
-        console.log(
-          "blId in response:",
-          updatedBusinessKind.serviceResponse.blId
-        );
-        console.log(
-          "Mapped label:",
-          businessLineOptions.find(
-            (option) =>
-              option.value === updatedBusinessKind.serviceResponse.blId
-          )?.label
-        );
-
-        // Close the editing mode (if any)
-        setEditRow(null);
-      } else {
-        // Handle error
-        console.error("Failed to update business kind:", response.status);
-      }
-    } catch (error) {
-      console.error("Error updating business kind:", error.message);
-    }
-  };
-  const logBcIds = (options) => {
-    options.forEach((option) => {
-      console.log("Label:", option.label);
-      console.log("bcId:", option.bcId);
-    });
-  };
-  const extractSelectedOptions = (bcIds) => {
-    return bcIds ? bcIds.map((option) => option.bcId) : [];
-  };
-  const handleUpdate = async (
-    id,
-    updatedName,
-    updatedBusinessLine,
-    enable,
-    active,
-    selectedBusinessCategory,
-    bcNames
-  ) => {
-    console.log("id:", id);
-    console.log("updatedBusinessLine:", updatedBusinessLine);
-    console.log("Selected business types:", selectedBusinessCategory);
-
-    // Find the corresponding businessLineOption for the updatedBusinessLine
-    const businessLineOption = businessLineOptions.find(
-      (option) => option.label === updatedBusinessLine
-    );
-
-    if (businessLineOption) {
-      // Fetch the existing bcIds from the API response
-      const response = await fetch(
-        `${config.host}/tenant/admin/v2/business/kind/${id}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const existingBusinessKind = await response.json();
-        const existingBcIds = existingBusinessKind.serviceResponse.bcIds || [];
-
-        // Concatenate the existing bcIds with the new ones
-        const updatedData = {
-          name: updatedName,
-          blId: businessLineOption.value,
-          enable,
-          active,
-          bcIds: [
-            ...extractSelectedOptions(selectedBusinessCategory),
-            ...existingBcIds,
-          ],
-          bcNames:
-            selectedBusinessCategory.map((option) => option.label) || bcNames,
-        };
-
-        // Update the local state immediately
-        setData((prevData) =>
-          prevData.map((row) =>
-            row.id === id
-              ? {
-                  ...row,
-                  ...updatedData,
-                }
-              : row
-          )
-        );
-
-        // Update the businessKind using the correct blId, enable, and active
-        await updateBusinessKind(id, businessLineOption.value, updatedData);
-
-        // Close the editing mode (if any)
-        setEditRow(null);
-      } else {
-        console.error(
-          "Failed to fetch business kind details:",
-          response.status
-        );
-      }
-    } else {
-      console.error(
-        "Invalid business line during update:",
-        updatedBusinessLine
-      );
-    }
-  };
-
-  const handleShowSideNav = async (bkId, index) => {
-    try {
-      const businessKindId = people.find((person) => person.bkId === bkId)?.id;
-
-      if (!businessKindId) {
-        console.error("Business Line ID not found for bkId:", bkId);
+      if (!businessCategoryId) {
+        console.error("Business Line ID not found for bcId:", bcId);
         return;
       }
 
       const response = await fetch(
-        `${config.host}/tenant/admin/v2/business/kind/${businessKindId}`,
+        `${config.host}/tenant/admin/v2/business/category/${businessCategoryId}`,
         {
           method: "GET",
           headers: {
@@ -714,29 +750,29 @@ export default function BusinessKindTable() {
       if (response.ok) {
         const data = await response.json();
 
-        // Fetch business categories
-        const businessCategories = await fetchBusinessCategories();
+        const businessKind = await fetchBusinessKind();
 
         // Map bcIds to corresponding names
-        const bcIdToNameMap = businessCategories.reduce((map, category) => {
-          map[category.bcId] = category.name;
+        const bcIdToNameMap = businessKind.reduce((map, kind) => {
+          map[kind.bkId] = kind.name;
           return map;
         }, {});
-
         const updatedPeople = people.map((row) => {
-          if (row.id === businessKindId) {
+          if (row.id === businessCategoryId) {
             return {
               ...row,
               isSideNavOpen: !row.isSideNavOpen,
               businessLine:
-                businessLineNamesMap[row.blId] ||
-                data.serviceResponse.businessLineName,
+                businessLineNamesMap[
+                  people.find((person) => person.id === businessCategoryId)
+                    ?.blId
+                ] || data.serviceResponse.businessLineName,
               createdTime: data.serviceResponse.createdTime,
               updatedTime: data.serviceResponse.updatedTime,
-              businessCategory: data.serviceResponse.bcIds || [], // Provide a default value if bcIds is null
+              businessCategory: data.serviceResponse.bkIds || [], // Provide a default value if bcIds is null
               businessCategoryNames:
-                data.serviceResponse.bcIds?.map(
-                  (bcId) => bcIdToNameMap[bcId] || "N/A"
+                data.serviceResponse.bkIds?.map(
+                  (bkId) => bcIdToNameMap[bkId] || "N/A"
                 ) || [],
             };
           } else {
@@ -752,6 +788,7 @@ export default function BusinessKindTable() {
 
         setData(updatedPeople);
 
+        // Update the toggle state for the corresponding row
         setToggleStates((prevStates) =>
           prevStates.map((state, i) =>
             i === index
@@ -760,6 +797,7 @@ export default function BusinessKindTable() {
           )
         );
 
+        // You can update the details state with the fetched data
         setDetails(data.serviceResponse);
       } else {
         console.error("Failed to fetch details:", response.status);
@@ -780,7 +818,7 @@ export default function BusinessKindTable() {
         <div className="sm:flex sm:items-center w-[90%]">
           <div className="sm:flex-auto sm:mt-20">
             <h1 className="text-base font-semibold leading-6 text-gray-900">
-              Kind section
+              Category section
             </h1>
           </div>
           <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
@@ -895,24 +933,23 @@ export default function BusinessKindTable() {
               bgColor2="bg-red-500"
               text="text-white"
               isSideNavOpen={row.isSideNavOpen}
-              business={"Business Category"}
+              business={"Business Kind"}
               onClose={() => handleShowSideNav(row.id, index)}
               details={row}
               toggleState={toggleStates[index]}
               onToggle={(field, value) => handleToggle(row.id, field, value)}
             />
           )}
-
           {editRow !== null && editRow.id === row.id && (
             <EditRow
               id={editRow.id}
-              heading="EDIT BUSINESS KIND"
+              heading="EDIT BUSINESS CATEGORY"
               name={editRow.name}
-              // selectedOptions={editRow.selectedOptions}
-              bcIds={editRow.bcIds}
               businessLine={editRow.businessLine}
               businessCategory={editRow.businessCategory}
-              business={"Business Category"}
+              blId={editRow.blId}
+              bcNames={editRow.bkNames}
+              business={"Business Kind"}
               handleUpdateRow={handleUpdate}
               onCancel={handleCancelEdit}
               businessLineOptions={businessLineOptions}
@@ -922,12 +959,9 @@ export default function BusinessKindTable() {
               }
               fetchBusinessKindOptions={fetchBusinessKindOptions}
               businessKindOptions={businessKindOptions}
-              businessNames="Select Bussiness Category"
-              bcNames={editRow.bcNames}
-              blId={editRow.blId}
-              logBcIds={logBcIds}
+              businessNames="Select Bussiness Kind"
               updateBcNames={(newBcNames) =>
-                setEditRow({ ...editRow, bcNames: newBcNames })
+                setEditRow({ ...editRow, bkNames: newBcNames })
               }
             />
           )}
@@ -936,9 +970,9 @@ export default function BusinessKindTable() {
 
       {isAddRowOpen && (
         <AddRow
-          heading="ADD NEW BUSINESS KIND"
+          heading="ADD NEW BUSINESS CATEGORY"
           // onAdd={handleAdd}
-          business="Business Category"
+          business="Business Kind"
           // toggleState={toggleStates[index]}
           onToggle={(field, value) => handleAddToggle(field, value)}
           onCancel={handleCancelEdit}
@@ -946,7 +980,7 @@ export default function BusinessKindTable() {
           fetchBusinessKindOptions={fetchBusinessKindOptions}
           businessKindOptions={businessKindOptions}
           handleAddUpdate={handleAddUpdate}
-          businessNames="Select Bussiness Category"
+          businessNames="Select Bussiness Kind"
         />
       )}
     </>

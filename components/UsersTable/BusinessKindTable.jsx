@@ -1,12 +1,18 @@
 "use client";
-import Toggle from "./Toggle";
+import Toggle from "../Toggle";
 import React, { useState, useEffect, useRef } from "react";
 import RightSideNav from "./RightSideNav";
 import EditRow from "./EditRow";
 import AddRow from "./AddRow";
-import config from "./config";
+import config from "../config";
 import { useRouter } from "next/navigation";
 import { IoPencilOutline, IoTrashOutline } from "react-icons/io5";
+import { EditIcon, RightIcon, SearchIcon } from "@/app/Assets/icons";
+import {
+  ArrowLongLeftIcon,
+  ArrowLongRightIcon,
+} from "@heroicons/react/20/solid";
+import CustomSelect from "./CountDropdown";
 class BusinessLine {
   constructor(blId, name, tenantId, enable, active, createdTime, updatedTime) {
     this.blId = blId;
@@ -170,14 +176,66 @@ export default function BusinessKindTable() {
   //   : [];
 
   // console.log('businessLineOptions:', businessLineOptions);
+  const [searchInput, setSearchInput] = useState("");
+  const [recordsPerPage, setRecordsPerPage] = useState(20);
 
   // Fetch data
-  const fetchData = async () => {
+  // const fetchData = async () => {
+  //   try {
+  //     await fetchBusinessLineNames(); // Fetch business line names once
+
+  //     const response = await fetch(
+  //       `${config.host}/tenant/admin/v2/business/kind/all`,
+  //       {
+  //         method: "GET",
+  //         headers: {
+  //           Authorization: `Bearer ${accessToken}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+
+  //     if (response.ok) {
+  //       const data = await response.json();
+
+  //       // Filter data based on search input
+  //       const filteredData = data.serviceResponse.businessKindList.filter(
+  //         (item) => item.name.toLowerCase().includes(searchInput.toLowerCase())
+  //       );
+
+  //       // Use businessLineNamesMap where needed
+  //       const updatedData = filteredData.map((item) => {
+  //         const businessLineName = businessLineNamesMap[item.blId] || "N/A";
+  //         return {
+  //           ...item,
+  //           id: item.bkId,
+  //           businessLineName,
+  //         };
+  //       });
+
+  //       setData(updatedData);
+
+  //       const toggleStates = filteredData.map((item) => ({
+  //         enable: item.enable,
+  //         active: item.active,
+  //       }));
+
+  //       setToggleStates(toggleStates);
+  //     } else {
+  //       console.error("Failed to fetch data:", response.status);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching data:", error.message);
+  //   }
+  // };
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const fetchData = async (pageNo = 1, pageSize = 20) => {
     try {
       await fetchBusinessLineNames(); // Fetch business line names once
 
       const response = await fetch(
-        `${config.host}/tenant/admin/v2/business/kind/all`,
+        `${config.host}/tenant/admin/v2/business/kind/all?pageNo=${pageNo}&pageSize=${pageSize}`,
         {
           method: "GET",
           headers: {
@@ -190,26 +248,33 @@ export default function BusinessKindTable() {
       if (response.ok) {
         const data = await response.json();
 
-        // Use businessLineNamesMap where needed
-        const updatedData = data.serviceResponse.businessKindList.map(
-          (item) => {
-            const businessLineName = businessLineNamesMap[item.blId] || "N/A";
-            return {
-              ...item,
-              id: item.bkId,
-              businessLineName,
-            };
-          }
+        // Calculate the total number of pages based on the total number of items and items per page
+        const totalItems = data.serviceResponse.businessKindList.length; // Assuming this is the total number of items
+        // const totalPages = Math.ceil(totalItems / pageSize);
+        const totalPages = 10;
+        setTotalPages(totalPages); // Update the totalPages state
+
+        // Filter data based on search input
+        const filteredData = data.serviceResponse.businessKindList.filter(
+          (item) => item.name.toLowerCase().includes(searchInput.toLowerCase())
         );
+
+        // Use businessLineNamesMap where needed
+        const updatedData = filteredData.map((item) => {
+          const businessLineName = businessLineNamesMap[item.blId] || "N/A";
+          return {
+            ...item,
+            id: item.bkId,
+            businessLineName,
+          };
+        });
 
         setData(updatedData);
 
-        const toggleStates = data.serviceResponse.businessKindList.map(
-          (item) => ({
-            enable: item.enable,
-            active: item.active,
-          })
-        );
+        const toggleStates = filteredData.map((item) => ({
+          enable: item.enable,
+          active: item.active,
+        }));
 
         setToggleStates(toggleStates);
       } else {
@@ -220,14 +285,33 @@ export default function BusinessKindTable() {
     }
   };
 
+  const handleRecordsPerPageChange = (value) => {
+    setRecordsPerPage(value);
+    setCurrentPage(1);
+    fetchData(1, value);
+  };
+
+  const topRef = useRef(null);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchData(page);
+    scrollToTop();
+  };
+
+  const scrollToTop = () => {
+    if (topRef.current) {
+      topRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
   useEffect(() => {
-    fetchData();
+    fetchData(currentPage, recordsPerPage);
     setIsAddRowOpen(false);
     const isAuthenticated = checkAuthentication();
     if (!isAuthenticated) {
       router.push("/admin/login");
     }
-  }, [accessToken]);
+  }, [accessToken, currentPage, recordsPerPage]);
 
   const [editRow, setEditRow] = useState(null);
   const [isAddRowOpen, setIsAddRowOpen] = useState(false);
@@ -237,6 +321,7 @@ export default function BusinessKindTable() {
 
   const handleAddRowToggle = () => {
     setIsAddRowOpen(!isAddRowOpen);
+    console.log("add is clicked");
   };
 
   const handleAdd = async (newRow) => {
@@ -442,6 +527,7 @@ export default function BusinessKindTable() {
 
   const handleEdit = async (row) => {
     try {
+      setEditRow(!editRow);
       // Fetch business categories
       const businessCategories = await fetchBusinessCategories();
 
@@ -460,8 +546,15 @@ export default function BusinessKindTable() {
         const businessKindDetails = await response.json();
 
         // Map bcId to corresponding names
+        // const bcIdToNameMap = businessCategories.reduce((map, category) => {
+        //   map[category.bcId] = category.name;
+        //   return map;
+        // }, {});
+
+        //------For bcId and bkid adding-----
+
         const bcIdToNameMap = businessCategories.reduce((map, category) => {
-          map[category.bcId] = category.name;
+          map[category.bcId] = { name: category.name, id: category.bcId };
           return map;
         }, {});
 
@@ -476,15 +569,36 @@ export default function BusinessKindTable() {
         if (businessLineOption) {
           const businessLineName = businessLineOption.label || "N/A";
           const businessLineId = businessLineOption.value || "N/A";
-
           // Set EditRow state
+          // setEditRow({
+          //   ...row,
+          //   blId: businessLineOption.value,
+          //   businessLine: businessLineName,
+          //   businessLineId: businessLineId,
+          //   bcIds: bcIds,
+          //   bcNames: bcIds.map((bcId) => bcIdToNameMap[bcId] || "N/A"),
+          //   // Use bcIds from the API response
+          // });
+
+          //------For bcId and bkid adding-----
+
           setEditRow({
             ...row,
             blId: businessLineOption.value,
             businessLine: businessLineName,
             businessLineId: businessLineId,
             bcIds: bcIds,
-            bcNames: bcIds.map((bcId) => bcIdToNameMap[bcId] || "N/A"),
+            bcNames: bcIds.map((bcId) => {
+              const businessCategory = bcIdToNameMap[bcId];
+              return businessCategory
+                ? {
+                    label: businessCategory.name,
+                    value: businessCategory.name,
+                    bcId: businessCategory.id,
+                    blId: businessKindDetails.serviceResponse.blId,
+                  }
+                : { label: "N/A", value: "N/A" }; // Return an object with label and value properties
+            }),
             // Use bcIds from the API response
           });
 
@@ -612,6 +726,86 @@ export default function BusinessKindTable() {
   const extractSelectedOptions = (bcIds) => {
     return bcIds ? bcIds.map((option) => option.bcId) : [];
   };
+  // const handleUpdate = async (
+  //   id,
+  //   updatedName,
+  //   updatedBusinessLine,
+  //   enable,
+  //   active,
+  //   selectedBusinessCategory,
+  //   bcNames
+  // ) => {
+  //   console.log("id:", id);
+  //   console.log("updatedBusinessLine:", updatedBusinessLine);
+  //   console.log("Selected business types:", selectedBusinessCategory);
+
+  //   // Find the corresponding businessLineOption for the updatedBusinessLine
+  //   const businessLineOption = businessLineOptions.find(
+  //     (option) => option.label === updatedBusinessLine
+  //   );
+
+  //   if (businessLineOption) {
+  //     // Fetch the existing bcIds from the API response
+  //     const response = await fetch(
+  //       `${config.host}/tenant/admin/v2/business/kind/${id}`,
+  //       {
+  //         method: "GET",
+  //         headers: {
+  //           Authorization: `Bearer ${accessToken}`,
+  //         },
+  //       }
+  //     );
+
+  //     if (response.ok) {
+  //       const existingBusinessKind = await response.json();
+  //       const existingBcIds = existingBusinessKind.serviceResponse.bcIds || [];
+
+  //       // Concatenate the existing bcIds with the new ones
+  //       const updatedData = {
+  //         name: updatedName,
+  //         blId: businessLineOption.value,
+  //         enable,
+  //         active,
+  //         bcIds: [
+  //           ...extractSelectedOptions(selectedBusinessCategory),
+  //           ...existingBcIds,
+  //         ],
+  //         bcNames:
+  //           selectedBusinessCategory.map((option) => option.label) || bcNames,
+  //       };
+
+  //       // Update the local state immediately
+  //       setData((prevData) =>
+  //         prevData.map((row) =>
+  //           row.id === id
+  //             ? {
+  //                 ...row,
+  //                 ...updatedData,
+  //               }
+  //             : row
+  //         )
+  //       );
+
+  //       // Update the businessKind using the correct blId, enable, and active
+  //       await updateBusinessKind(id, businessLineOption.value, updatedData);
+
+  //       // Close the editing mode (if any)
+  //       setEditRow(null);
+  //     } else {
+  //       console.error(
+  //         "Failed to fetch business kind details:",
+  //         response.status
+  //       );
+  //     }
+  //   } else {
+  //     console.error(
+  //       "Invalid business line during update:",
+  //       updatedBusinessLine
+  //     );
+  //   }
+  // };
+
+  //Second one
   const handleUpdate = async (
     id,
     updatedName,
@@ -631,34 +825,19 @@ export default function BusinessKindTable() {
     );
 
     if (businessLineOption) {
-      // Fetch the existing bcIds from the API response
-      const response = await fetch(
-        `${config.host}/tenant/admin/v2/business/kind/${id}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+      // Concatenate the existing bcIds with the new ones
+      const updatedData = {
+        name: updatedName,
+        blId: businessLineOption.value,
+        enable,
+        active,
+        bcIds: selectedBusinessCategory.map((option) => option.bcId),
+        bcNames: selectedBusinessCategory.map((option) => option.label),
+      };
 
-      if (response.ok) {
-        const existingBusinessKind = await response.json();
-        const existingBcIds = existingBusinessKind.serviceResponse.bcIds || [];
-
-        // Concatenate the existing bcIds with the new ones
-        const updatedData = {
-          name: updatedName,
-          blId: businessLineOption.value,
-          enable,
-          active,
-          bcIds: [
-            ...extractSelectedOptions(selectedBusinessCategory),
-            ...existingBcIds,
-          ],
-          bcNames:
-            selectedBusinessCategory.map((option) => option.label) || bcNames,
-        };
+      try {
+        // Update the businessKind using the correct blId, enable, and active
+        await updateBusinessKind(id, businessLineOption.value, updatedData);
 
         // Update the local state immediately
         setData((prevData) =>
@@ -672,16 +851,10 @@ export default function BusinessKindTable() {
           )
         );
 
-        // Update the businessKind using the correct blId, enable, and active
-        await updateBusinessKind(id, businessLineOption.value, updatedData);
-
         // Close the editing mode (if any)
         setEditRow(null);
-      } else {
-        console.error(
-          "Failed to fetch business kind details:",
-          response.status
-        );
+      } catch (error) {
+        console.error("Error updating business kind:", error.message);
       }
     } else {
       console.error(
@@ -690,7 +863,6 @@ export default function BusinessKindTable() {
       );
     }
   };
-
   const handleShowSideNav = async (bkId, index) => {
     try {
       const businessKindId = people.find((person) => person.bkId === bkId)?.id;
@@ -771,37 +943,49 @@ export default function BusinessKindTable() {
 
   const handleCancelEdit = () => {
     setEditRow(null);
-    setIsAddRowOpen(false);
+    setIsAddRowOpen(null);
   };
 
   return (
     <>
-      <div className={`overflow-hidden px-4 sm:px-6 lg:px-8 `}>
-        <div className="sm:flex sm:items-center w-[90%]">
-          <div className="sm:flex-auto sm:mt-20">
-            <h1 className="text-base font-semibold leading-6 text-gray-900">
-              Kind section
-            </h1>
-          </div>
-          <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-            <button
-              type="button"
-              className="btn-primary-sm"
-              onClick={handleAddRowToggle}
-            >
-              Add
-            </button>
+      <div className={`pr-4 sm:pr-6 lg:pr-8 relative`} ref={topRef}>
+        <div className="absolute right-[60px] top-[-70px]">
+          <button
+            type="button"
+            className="user-btn"
+            onClick={handleAddRowToggle}
+          >
+            <span className="text-xl pr-2.5">+</span>
+            <span className="text-lg font-medium">Add Kind</span>
+          </button>
+        </div>
+        {/* search bar */}
+        <div className="search-bar w-[50%] lg:w-[30%]">
+          <div className="relative mt-5 rounded-md shadow-sm">
+            <input
+              type="text"
+              name="account-number"
+              id="account-number"
+              className="block w-full rounded-md border py-3 px-4 text-gray-900  placeholder:text-gray-400 sm:text-sm sm:leading-6 outline-none border-[#E1E1E1]"
+              placeholder="Search"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+            <div className="pointer-events-none absolute inset-y-0 right-1 flex items-center pr-3">
+              <SearchIcon PathClassName="stroke-gray-400" />
+            </div>
           </div>
         </div>
-        <div className="mt-8 flow-root">
-          <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="inline-block min-w-[90%] py-2 align-middle sm:px-6 lg:px-8">
-              <table className="min-w-full divide-y divide-gray-300">
+
+        <div className="mt-8 flow-root pb-40 ">
+          <div className="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
+            <div className="inline-block min-w-[100%] py-2 align-middle sm:px-6 lg:px-8">
+              <table className="min-w-full divide-y divide-transparent">
                 <thead>
-                  <tr>
+                  <tr className="mb-10">
                     <th
                       scope="col"
-                      className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+                      className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-5"
                     >
                       Name
                     </th>
@@ -813,77 +997,169 @@ export default function BusinessKindTable() {
                     </th>
                     <th
                       scope="col"
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      className="px-1 py-3.5 text-left text-sm font-semibold text-gray-900"
                     >
                       Enable
                     </th>
                     <th
                       scope="col"
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      className="px-0 py-3.5 text-left text-sm font-semibold text-gray-900"
                     >
                       Active
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                    >
-                      Edit
                     </th>
                     {/* <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Delete
                     </th> */}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {people.map((row) => (
-                    <tr key={row.id}>
-                      <td className="whitespace-nowrap py-6 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
-                        <button
-                          className="px-1 py-1 hover:bg-gray-100 rounded"
-                          onClick={() => handleShowSideNav(row.id)}
-                        >
-                          {row.name}
-                        </button>
+                <tbody className="divide-y divide-transparent ">
+                  {people.filter((row) =>
+                    row.name.toLowerCase().includes(searchInput.toLowerCase())
+                  ).length > 0 ? (
+                    people
+                      .filter((row) =>
+                        row.name
+                          .toLowerCase()
+                          .includes(searchInput.toLowerCase())
+                      )
+                      .slice(0, recordsPerPage)
+                      .map((row) => (
+                        <tr key={row.id} className=" rounded-md">
+                          <td className="w-[25%]">
+                            <div className="mb-3 pl-4 py-[25px] bg-white border-none rounded-l-[10px] ">
+                              <button
+                                className="px-1 hover:bg-primaryColor hover:text-white rounded transition-all delay-75"
+                                onClick={() => handleShowSideNav(row.id)}
+                              >
+                                <span className="block max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                  {row.name}
+                                </span>
+                              </button>
+                            </div>
+                          </td>
+                          <td className="relative right-1 font-light w-[20%]">
+                            <div className="mb-3 py-[25px] bg-white ">
+                              {businessLineNamesMap[row.blId] || "N/A"}
+                            </div>
+                          </td>
+                          <td className="relative right-2 w-[14%]">
+                            <div className="py-[24.5px] px-3 mb-3 bg-white">
+                              <Toggle
+                                checked={row.enable}
+                                onToggle={(value) =>
+                                  handleMainToggle(row.id, "enable", value)
+                                }
+                              />
+                            </div>
+                          </td>
+                          <td className="relative right-3 w-[27%]">
+                            <div className="py-[24.5px] px-3 mb-3 bg-white">
+                              <Toggle
+                                checked={row.active}
+                                onToggle={(value) =>
+                                  handleMainToggle(row.id, "active", value)
+                                }
+                              />
+                            </div>
+                          </td>
+                          <td className="relative right-4 ">
+                            <div className="py-[16px] mb-3 bg-white pr-2">
+                              {/* Edit Icon */}
+                              <button
+                                className="px-6 py-2 text-white hover:bg-transparent border hover:border-primaryColor hover:text-primaryColor bg-primaryColor rounded-lg cursor-pointer group transition-all delay-75"
+                                onClick={() => handleEdit(row)}
+                              >
+                                <div className="flex items-center">
+                                  <span className="mr-2.5">Edit</span>
+                                  <EditIcon PathClassName="group-hover:fill-primaryColor transition-all delay-75" />
+                                </div>
+                              </button>
+                            </div>
+                          </td>
+                          <td className="relative right-5 ">
+                            <div className="py-[21.3px] mb-3 bg-white rounded-r-[10px]">
+                              <button className="px-3 rounded text-white hover:bg-gray-100 mr-2">
+                                <RightIcon />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="6"
+                        className="text-center py-32 text-primaryColor text-3xl"
+                      >
+                        No results found
                       </td>
-                      <td className="whitespace-nowrap py-4 text-sm font-medium text-gray-900 sm:pl-0">
-                        {/* {console.log('businessLineNamesMap:', businessLineNamesMap)} */}
-                        {businessLineNamesMap[row.blId] || "N/A"}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <Toggle
-                          checked={row.enable}
-                          onToggle={(value) =>
-                            handleMainToggle(row.id, "enable", value)
-                          }
-                        />
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <Toggle
-                          checked={row.active}
-                          onToggle={(value) =>
-                            handleMainToggle(row.id, "active", value)
-                          }
-                        />
-                      </td>
-
-                      <td className="whitespace-nowrap py-4 text-sm text-gray-500">
-                        {/* Edit Icon */}
-                        <button
-                          className="px-3 py-1 ml-2 rounded text-white hover:bg-gray-100"
-                          onClick={() => handleEdit(row)}
-                        >
-                          <IoPencilOutline className="h-5 w-5 text-blue-600" />
-                        </button>
-                      </td>
-                      {/* <td className="whitespace-nowrap py-4 text-sm text-gray-500">
-                        <button className="px-3 py-1 ml-2  text-customRed rounded hover:bg-gray-100" onClick={() => handleDelete(person.id)}>
-                          <IoTrashOutline className="h-5 w-5" />
-                        </button>
-                      </td> */}
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
+            </div>
+          </div>
+          {/* Pagination */}
+          <div className="relative">
+            <nav className="flex items-center justify-center pt-6 px-4 sm:px-0">
+              <div className="hidden md:-mt-px md:flex">
+                {/* Previous page link */}
+                <a
+                  href="javascript:void(0)"
+                  className="items-center text-sm font-medium cursor-pointer hover:bg-gray-300 rounded-full w-6 h-6 relative group mr-1"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                >
+                  <span className="absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%]">
+                    <ArrowLongLeftIcon
+                      className="h-5 w-5 text-gray-400 group-hover:text-white"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </a>
+                {/* Page links */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <a
+                      key={page}
+                      href="javascript:void(0)"
+                      className={`items-center text-sm font-medium cursor-pointer rounded-full w-6 h-6 relative mr-1 ${
+                        page === currentPage
+                          ? " text-white bg-primaryColor"
+                          : "border-transparent text-gray-500 hover:text-primaryColor hover:border-gray-300 hover:bg-gray-300"
+                      }`}
+                      onClick={() => handlePageChange(page)}
+                    >
+                      <span className="absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%]">
+                        {page}
+                      </span>
+                    </a>
+                  )
+                )}
+                {/* Next page link */}
+                <a
+                  href="javascript:void(0)"
+                  className="items-center text-sm font-medium cursor-pointer hover:bg-gray-300 rounded-full w-6 h-6 relative group"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                >
+                  <span className="absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%]">
+                    <ArrowLongRightIcon
+                      className="h-5 w-5 text-gray-400 group-hover:text-white"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </a>
+              </div>
+            </nav>
+
+            <div className="absolute right-4 top-5 flex items-center">
+              <p className="mr-3 text-sm font-light">Records per page</p>
+              <CustomSelect
+                options={[5, 10, 15, 20]}
+                value={recordsPerPage}
+                onChange={(value) => {
+                  handleRecordsPerPageChange(value);
+                }}
+              />
             </div>
           </div>
         </div>
@@ -926,9 +1202,11 @@ export default function BusinessKindTable() {
               bcNames={editRow.bcNames}
               blId={editRow.blId}
               logBcIds={logBcIds}
-              updateBcNames={(newBcNames) =>
-                setEditRow({ ...editRow, bcNames: newBcNames })
-              }
+              updateBcNames={(newBcNames) => {
+                setEditRow({ ...editRow, bcNames: newBcNames });
+                console.log("bcNames updated", newBcNames);
+                console.log("exsisting bcNames", editRow.bcNames);
+              }}
             />
           )}
         </React.Fragment>
@@ -947,6 +1225,7 @@ export default function BusinessKindTable() {
           businessKindOptions={businessKindOptions}
           handleAddUpdate={handleAddUpdate}
           businessNames="Select Bussiness Category"
+          addButtonName = "Kind"
         />
       )}
     </>

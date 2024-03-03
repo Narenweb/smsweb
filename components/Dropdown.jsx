@@ -14,20 +14,31 @@ export default function Dropdown({
   isError,
   ErrorMessage,
   id,
+  defaultOption,
 }) {
-  const [selectedOption, setSelectedOption] = useState({
-    label: "",
-    value: "",
+  const [selectedOption, setSelectedOption] = useState(() => {
+    // Check local storage for previously selected option
+    const storedOption = localStorage.getItem(`${id}-selected-option`);
+    return storedOption
+      ? JSON.parse(storedOption)
+      : defaultOption || { label: "", value: "" };
   });
 
   const handleOptionClick = (option) => {
     setSelectedOption(option);
     onSelect(option);
   };
+
   useEffect(() => {
     // Call the onSelect callback when the selected value changes
-    onSelect({ value: selectedOption }); // You may want to pass the whole option object here
-  }, [selectedOption, onSelect]);
+    onSelect({ value: selectedOption || defaultOption });
+    console.log("value in dropdown component", selectedOption);
+    console.log("value in dropdown default options", defaultOption);
+    localStorage.setItem(
+      `${id}-selected-option`,
+      JSON.stringify(selectedOption)
+    );
+  }, [selectedOption, onSelect, id]);
   const isOptionSelected = selectedOption.value !== "";
   return (
     <div>
@@ -62,7 +73,7 @@ export default function Dropdown({
           leaveTo="transform opacity-0 scale-95"
         >
           <Menu.Items
-            className={`absolute right-0 z-10 mt-2 text-center origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none getOptions w-[370px] cursor-pointer ${
+            className={`dropdown-options absolute right-0 z-10 mt-2 text-center origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none getOptions w-[370px] cursor-pointer max-h-[400px] overflow-y-auto ${
               isError && !isOptionSelected ? "ring-red-500" : ""
             }`}
           >

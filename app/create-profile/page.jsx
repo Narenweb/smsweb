@@ -6,9 +6,9 @@ import Dropdown from "@/components/Dropdown";
 import UserFooter from "@/components/UserFooter";
 import config from "@/components/config";
 import { useRouter } from "next/navigation";
-import { FaCheck } from "react-icons/fa";
+import { FaCheck, FaAngleDown, FaPlus } from "react-icons/fa";
 import { FiUpload, FiTrash2 } from "react-icons/fi";
-import { FaAngleDown } from "react-icons/fa";
+// import "../Assets";
 export default function CreateProfile() {
   const router = useRouter();
   const sections = [
@@ -19,7 +19,6 @@ export default function CreateProfile() {
   ];
   const [accessToken, setAccessToken] = useState({});
   const [activeSection, setActiveSection] = useState(null);
-  // const accessToken = localStorage.getItem("accessToken");
   const checkAuthentication = () => {
     const isAuthenticated = Boolean(localStorage.getItem("accessToken"));
     return isAuthenticated;
@@ -48,6 +47,7 @@ export default function CreateProfile() {
   }));
   useEffect(() => {
     fetchBusinessLineNames();
+    fetchBusinessCategories();
     const isAuthenticated = checkAuthentication();
     if (!isAuthenticated) {
       router.push("/admin/login");
@@ -127,6 +127,11 @@ export default function CreateProfile() {
   const [isDropdownErrorCountry, setIsDropdownErrorCountry] = useState(false);
   const [isDropdownErrorCity, setIsDropdownErrorCity] = useState(false);
   const [isDropdownErrorState, setIsDropdownErrorState] = useState(false);
+  const [isSocialMediaError, setIsSocialMediaError] = useState(false);
+  const [selectedSocialMediaOptions, setSelectedSocialMediaOptions] = useState({
+    options: null,
+  });
+  const [isMediaLinkError, setIsMediaLinkError] = useState(false);
   const [selectedStateOptions, setSelectedStateOptions] = useState({
     options: null,
   });
@@ -136,11 +141,38 @@ export default function CreateProfile() {
   const [selectedCountryOptions, setSelectedCountryOptions] = useState({
     options: null,
   });
+  const [selectedZipOptions, setSelectedZipOptions] = useState({
+    options: null,
+  });
 
   const handleForceReload = () => {
     window.location.reload();
   };
-  const handleValidationOne = () => {
+  // const handleValidationOne = () => {
+  //   const inputValue = document.getElementById("business-name").value;
+  //   const isNameValid = inputValue.trim() !== "";
+  //   setIsError(!isNameValid);
+
+  //   // Check if the business line is valid
+  //   const selectedOption = selectedOptions.options;
+  //   console.log("Selected Option:", selectedOption);
+  //   const isBusinessLineValid = selectedOption !== null;
+  //   setIsDropdownError(!isBusinessLineValid);
+
+  //   // Check if both validations pass before moving to the next section
+  //   if (isNameValid && isBusinessLineValid) {
+  //     // Save entered data to local storage
+  //     localStorage.setItem("business-name", inputValue);
+  //     localStorage.setItem("selectedbusinessLine", selectedOption);
+  //     // Move to the next section
+  //     const nextSection = activeSection + 1;
+  //     setActiveSection(nextSection);
+  //     // Save the active section to local storage
+  //     localStorage.setItem("activeSection", nextSection);
+  //     window.scrollTo(350, 350);
+  //   }
+  // };
+  const handleValidationOne = async () => {
     const inputValue = document.getElementById("business-name").value;
     const isNameValid = inputValue.trim() !== "";
     setIsError(!isNameValid);
@@ -153,35 +185,82 @@ export default function CreateProfile() {
 
     // Check if both validations pass before moving to the next section
     if (isNameValid && isBusinessLineValid) {
-      // Save entered data to local storage
-      localStorage.setItem("business-name", inputValue);
-      localStorage.setItem(
-        "selected-business-line",
-        JSON.stringify(selectedOption)
-      );
+      try {
+        const response = await fetch(
+          `${config.host}/tenant/admin/v2/partner/business/profile/all`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              businessName: inputValue,
+              businessLine: selectedOption,
+            }),
+          }
+        );
 
-      // Move to the next section
-      const nextSection = activeSection + 1;
-      setActiveSection(nextSection);
-      // Save the active section to local storage
-      localStorage.setItem("activeSection", nextSection);
+        if (response.ok) {
+          // Move to the next section
+          const nextSection = activeSection + 1;
+          setActiveSection(nextSection);
+          // Save the active section to local storage
+          localStorage.setItem("business-name", inputValue);
+          localStorage.setItem("activeSection", nextSection);
+          window.scrollTo(350, 350);
+        } else {
+          // Handle error response
+          console.error("Error saving data:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error saving data:", error.message);
+      }
     }
-    // localStorage.getItem("business-name", inputValue);
-    // localStorage.getItem(
-    //   "selected-business-line",
-    //   JSON.stringify(selectedOption)
-    // );
   };
+
+  useEffect(() => {
+    // Check if the component is in the first section
+    if (activeSection === 1) {
+      // Retrieve values from local storage
+      const storedName = localStorage.getItem("business-name") || "";
+
+      // Set the business name in the input box
+      document.getElementById("business-name").value = storedName;
+    }
+    if (activeSection === 2) {
+      // Retrieve values from local storage
+      const storedEmail = localStorage.getItem("business-email") || "";
+      const storedPhone = localStorage.getItem("business-phone") || "";
+      const storedWhatsapp = localStorage.getItem("business-whatsapp") || "";
+      const storedAddress = localStorage.getItem("business-address") || "";
+      const storedMediaLink = localStorage.getItem("business-media-link") || "";
+
+      // Set the business name in the input box
+      document.getElementById("business-email").value = storedEmail;
+      document.getElementById("business-phone").value = storedPhone;
+      document.getElementById("business-whatsapp").value = storedWhatsapp;
+      document.getElementById("business-address").value = storedAddress;
+      document.getElementById("business-media-link").value = storedMediaLink;
+    }
+  }, [activeSection]);
 
   const handleBack = () => {
     // Handle click on the back button
     const previousSection = activeSection - 1;
     setActiveSection(previousSection);
     localStorage.setItem("activeSection", previousSection);
+    window.scrollTo(350, 350);
   };
-  const handleValidationTwo = () => {
+  function validateEmail(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  }
+  const handleValidationTwo = async () => {
     const inputEmailValue = document.getElementById("business-email").value;
-    const isEmailValid = inputEmailValue.trim() !== "";
+    const isEmail = inputEmailValue.trim() !== "";
+    setIsEmailError(!isEmail);
+    const isEmailValid = validateEmail(inputEmailValue);
     setIsEmailError(!isEmailValid);
     const inputPhoneValue = document.getElementById("business-phone").value;
     const isPhoneValid = inputPhoneValue.trim() !== "";
@@ -193,42 +272,129 @@ export default function CreateProfile() {
     const inputAddressValue = document.getElementById("business-address").value;
     const isAddressValid = inputAddressValue.trim() !== "";
     setIsAddressError(!isAddressValid);
-    const inputZipValue = document.getElementById("business-zipCode").value;
-    const isZipValid = inputZipValue.trim() !== "";
+    // const selectedOptionZip = selectedZipOptions.options;
+
+    const selectedOptionZip = selectedPlaceOption;
+    const selectedOptionCity = selectedPlace;
+    const selectedOptionState = selectedState;
+    localStorage.setItem("selectedState", JSON.stringify(selectedOptionState));
+    const isZipValid = selectedOptionZip !== "";
     setIsZipError(!isZipValid);
+    console.log("Selected Option Zipcode:", selectedOptionZip);
+    console.log("Selected Option city:", selectedOptionCity);
+    console.log("Selected Option state:", selectedOptionState);
     //country
     const selectedOptionCountry = selectedCountryOptions.options;
     console.log("Selected Option country:", selectedOptionCountry);
-    const isCountryValid = selectedOptionCountry !== null;
-    setIsDropdownErrorCountry(!isCountryValid);
+    // const isCountryValid = selectedOptionCountry !== null;
+    // setIsDropdownErrorCountry(!isCountryValid);
     //City
-    const selectedOptionCity = selectedCityOptions.options;
-    console.log("Selected Option city:", selectedOptionCity);
-    const isCityValid = selectedOptionCity !== null;
+
+    // const selectedOptionCity = selectedCityOptions.options;
+    // console.log("Selected Option city:", selectedOptionCity);
+    const isCityValid = selectedOptionCity !== "";
     setIsDropdownErrorCity(!isCityValid);
     //State
-    const selectedOptionState = selectedStateOptions.options;
-    console.log("Selected Option state:", selectedOptionState);
-    const isStateValid = selectedOptionState !== null;
+    // const selectedOptionState = selectedStateOptions.options;
+    // console.log("Selected Option state:", selectedOptionState);
+    const isStateValid = selectedOptionState !== "";
     setIsDropdownErrorState(!isStateValid);
+    //social media
+    const selectedSocialMediaState = selectedSocialMediaOptions.options;
+    console.log("Selected Social Media:", selectedSocialMediaState);
+    // const isMediaValid = selectedSocialMediaState !== null;
+    // setIsSocialMediaError(!isMediaValid);
+    //Social Media Link
+    const countryDefaultValue = "India";
+    const inputMediaLinkValue =
+      document.getElementById(`business-media-link`).value;
+    // const isMediaLinkValid = inputMediaLinkValue.trim() !== "";
+    // setIsMediaLinkError(!isMediaLinkValid);
 
     // Check if both validations pass before moving to the next section
-    if (
-      isEmailValid &&
-      isPhoneValid &&
-      isWhatsappValid &&
-      isAddressValid &&
-      isZipValid &&
-      isCountryValid &&
-      isCityValid &&
-      isStateValid
-    ) {
-      // Move to the next section
-      const nextSection = activeSection + 1;
-      setActiveSection(nextSection);
-      // Save the active section to local storage
-      localStorage.setItem("activeSection", nextSection);
+    try {
+      const response = await fetch(
+        `${config.host}/tenant/admin/v2/partner/business/profile/all`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            // Add any additional headers if needed
+          },
+          body: JSON.stringify({
+            businessEmail: inputEmailValue,
+            businessPhone: inputPhoneValue,
+            businessWhatsapp: inputWhatsappValue,
+            businessAddress: inputAddressValue,
+            country: countryDefaultValue,
+            state: selectedOptionState,
+            city: selectedOptionCity,
+            zipCode: selectedOptionZip,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        // Move to the next section
+        const nextSection = activeSection + 1;
+        setActiveSection(nextSection);
+        // Save the active section to local storage
+        localStorage.setItem("activeSection", nextSection);
+        window.scrollTo(350, 350);
+
+        //   // Save the active section to local storage
+        localStorage.setItem("activeSection", nextSection);
+        localStorage.setItem("business-email", inputEmailValue);
+        localStorage.setItem("business-phone", inputPhoneValue);
+        localStorage.setItem("business-whatsapp", inputWhatsappValue);
+        localStorage.setItem("business-address", inputAddressValue);
+        localStorage.setItem("business-media-link", inputMediaLinkValue);
+
+        // Store selected options in local storage
+        localStorage.setItem("selectedZip", JSON.stringify(selectedOptionZip));
+        localStorage.setItem("selectedCity", selectedOptionCity);
+        localStorage.setItem(
+          "selectedState",
+          JSON.stringify(selectedOptionState)
+        );
+      } else {
+        // Handle error response
+        console.error("Error saving data:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error saving data:", error.message);
     }
+    // if (
+    //   isEmailValid &&
+    //   isEmail &&
+    //   isPhoneValid &&
+    //   isWhatsappValid &&
+    //   isAddressValid &&
+    //   isZipValid &&
+    //   isCityValid &&
+    //   isStateValid
+    // ) {
+    //   // Move to the next section
+    //   const nextSection = activeSection + 1;
+    //   setActiveSection(nextSection);
+    //   // Save the active section to local storage
+    //   localStorage.setItem("activeSection", nextSection);
+    //   localStorage.setItem("business-email", inputEmailValue);
+    //   localStorage.setItem("business-phone", inputPhoneValue);
+    //   localStorage.setItem("business-whatsapp", inputWhatsappValue);
+    //   localStorage.setItem("business-address", inputAddressValue);
+    //   localStorage.setItem("business-media-link", inputMediaLinkValue);
+
+    //   // Store selected options in local storage
+    //   localStorage.setItem("selectedZip", JSON.stringify(selectedOptionZip));
+    //   localStorage.setItem("selectedCity", selectedOptionCity);
+    //   localStorage.setItem(
+    //     "selectedState",
+    //     JSON.stringify(selectedOptionState)
+    //   );
+    //   window.scrollTo(350, 350);
+    // }
   };
 
   //firstSection
@@ -236,12 +402,14 @@ export default function CreateProfile() {
     // Clear the error when the user starts typing
     setIsError(false);
   };
-  const handleOptionClick = (option) => {
+  const handleOptionClick = (selectedLabel) => {
     // Check if the selected option is different from the current state
-    if (selectedOptions.label !== option) {
+    const selectedOption = businessLineOptions.find(
+      (option) => option.label === selectedLabel
+    );
+    if (selectedOption) {
       setSelectedOptions({
-        ...selectedOptions,
-        options: option,
+        options: selectedOption.label,
       });
     }
   };
@@ -259,11 +427,14 @@ export default function CreateProfile() {
   const handleAddressChange = () => {
     setIsAddressError(false);
   };
-  const handleZipChange = () => {
-    setIsZipError(false);
-  };
+  // const handleZipChange = () => {
+  //   setIsZipError(false);
+  // };
+
   const handleOptionClickCountry = (option) => {
     console.log("Country option clicked:", option);
+    console.log("Country label clicked:", selectedCountryOptions.label);
+
     if (selectedCountryOptions.label !== option) {
       setSelectedCountryOptions({
         ...selectedCountryOptions,
@@ -271,24 +442,119 @@ export default function CreateProfile() {
       });
     }
   };
-  const handleOptionClickCity = (option) => {
+  const [selectedPlaceOption, setSelectedPlaceOption] = useState("");
+  const handleZipChange = async (option) => {
+    console.log("place option clicked:", option);
+    // setCityDropdownDisabled(option);
+    setSelectedPlaceOption(option);
+  };
+
+  const [places, setPlaces] = useState([]);
+  const [selectedPlace, setSelectedPlace] = useState("");
+  const [isPlaceDropdownDisabled, setPlaceDropdownDisabled] = useState(true);
+
+  const handleOptionClickCity = async (option) => {
     console.log("City option clicked:", option);
-    if (selectedCityOptions.label !== option) {
-      setSelectedCityOptions({
-        ...selectedCityOptions,
+    setPlaceDropdownDisabled(option);
+    setSelectedPlace(option);
+    // localStorage.setItem("selectedState", JSON.stringify(option));
+  };
+  const [cities, setCities] = useState([]);
+  const [selectedState, setSelectedState] = useState("");
+  const [isCityDropdownDisabled, setCityDropdownDisabled] = useState(true);
+
+  const handleOptionClickState = async (option) => {
+    console.log("State option clicked:", option);
+    setCityDropdownDisabled(option);
+    setSelectedState(option);
+    // Save selected state to local storage
+  };
+
+  const fetchCityData = async () => {
+    try {
+      const response = await fetch(
+        `https://api.urbanbarrow.com/v1/public/geoLocation?parentId=${selectedState}&pageNo=0&pageSize=1000`
+      );
+
+      const data = await response.json();
+      const citiesData = data.serviceResponse.geoLocationList;
+
+      setCities(citiesData);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+      // Handle errors appropriately
+    }
+  };
+  const fetchPlaceData = async () => {
+    try {
+      const response = await fetch(
+        `https://api.urbanbarrow.com/v1/public/geoLocation?parentId=${selectedPlace}&pageNo=0&pageSize=1000`
+      );
+
+      const data = await response.json();
+      const placesData = data.serviceResponse.geoLocationList;
+
+      setPlaces(placesData);
+    } catch (error) {
+      console.error("Error fetching places:", error);
+      // Handle errors appropriately
+    }
+  };
+  useEffect(() => {
+    // Check if there is a selected state in local storage
+    const storedSelectedState = localStorage.getItem("selectedState");
+
+    if (storedSelectedState) {
+      // Parse and set the selected state from local storage
+      const parsedSelectedState = JSON.parse(storedSelectedState);
+      setSelectedState(parsedSelectedState);
+      console.log("parsedSelectedState", parsedSelectedState);
+
+      // Fetch city data based on the selected state
+      // fetchCityData(parsedSelectedState.value);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCityData();
+    fetchPlaceData();
+    if (selectedState) {
+      fetchCityData();
+    }
+    if (selectedPlace) {
+      fetchPlaceData();
+    }
+  }, [selectedState, selectedPlace]);
+
+  const handleSocialMediaOption = (option) => {
+    console.log("social media option clicked:", option);
+    if (selectedSocialMediaOptions.label !== option) {
+      setSelectedSocialMediaOptions({
+        ...selectedSocialMediaOptions,
         options: option,
       });
     }
   };
-
-  const handleOptionClickState = (option) => {
-    console.log("State option clicked:", option);
-    if (selectedStateOptions.label !== option) {
-      setSelectedStateOptions({
-        ...selectedStateOptions,
-        options: option,
-      });
-    }
+  const handleMediaLinkOption = (index, link) => {
+    setSocialMediaLinks((prevLinks) => {
+      const updatedLinks = [...prevLinks];
+      updatedLinks[index].link = link;
+      return updatedLinks;
+    });
+    setIsMediaLinkError(false);
+  };
+  const handleRemoveSocialMedia = (index) => {
+    setSocialMediaLinks((prevLinks) => {
+      const updatedLinks = [...prevLinks];
+      updatedLinks.splice(index, 1);
+      return updatedLinks;
+    });
+  };
+  const [socialMediaLinks, setSocialMediaLinks] = useState([
+    { type: "", link: "" },
+  ]);
+  const handleAddSocialMedia = () => {
+    setSocialMediaLinks((prevLinks) => [...prevLinks, { type: "", link: "" }]);
   };
 
   //Third section Media
@@ -316,6 +582,7 @@ export default function CreateProfile() {
     setActiveSection(nextSection);
     // Save the active section to local storage
     localStorage.setItem("activeSection", nextSection);
+    window.scrollTo(350, 350);
   };
 
   //Fourth section Business
@@ -323,7 +590,8 @@ export default function CreateProfile() {
   const [geoLocations, setGeoLocations] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [selectedCountry, setSelectedCountry] = useState(null);
-  const [selectedDistrict, setSelectedDistrict] = useState(null);
+  const [selectedDistrict, setSelectedDistrict] = useState([]);
+  const [selectedDistrictOptions, setSelectedDistrictOptions] = useState([]);
   const [districtOptions, setDistrictOptions] = useState([]);
   const [choosePlace, setChoosePlace] = useState([]);
   const [isSecondBoxVisible, setIsSecondBoxVisible] = useState(false);
@@ -332,6 +600,7 @@ export default function CreateProfile() {
   const [selectPlaceOptions, setSelectPlaceOptions] = useState([]);
 
   //statebox
+  const [state, setState] = useState([]);
   const fetchGeoLocations = async () => {
     try {
       const response = await fetch(
@@ -349,6 +618,7 @@ export default function CreateProfile() {
     const fetchData = async () => {
       const locations = await fetchGeoLocations();
       setGeoLocations(locations);
+      setState(locations);
     };
 
     fetchData();
@@ -377,13 +647,18 @@ export default function CreateProfile() {
       }
     });
   };
+  const [allSelectedDistrict, setAllSelectedDistrict] = useState([]);
   //districtbox-second section
+  //New changes with prop
   const handleRegionChange = async (selectedState) => {
-    setSelectedRegion(selectedState);
+    setSelectedRegion((prevSelectedRegion) => {
+      return prevSelectedRegion === selectedState ? null : selectedState;
+    });
+
     if (selectedState) {
       try {
         const response = await fetch(
-          `https://api.urbanbarrow.com/v1/public/geoLocation?parentId=${selectedState}&pageNo=0&pageSize=1000`
+          `${config.host}/v1/public/geoLocation?parentId=${selectedState}&pageNo=0&pageSize=1000`
         );
         const data = await response.json();
         if (
@@ -392,6 +667,23 @@ export default function CreateProfile() {
           data.serviceResponse.geoLocationList
         ) {
           setDistrictOptions(data.serviceResponse.geoLocationList);
+          setAllSelectedDistrict((prevOptions) => {
+            // Assuming data.serviceResponse.geoLocationList is an array of options
+            const newOptions = data.serviceResponse.geoLocationList;
+
+            // Assuming there is a unique identifier (e.g., locationId) for each option
+            const existingOptionIds = prevOptions.map(
+              (option) => option.locationId
+            );
+
+            const filteredNewOptions = newOptions.filter(
+              (newOption) => !existingOptionIds.includes(newOption.locationId)
+            );
+
+            // Combine the existing options with the new ones
+            return [...prevOptions, ...filteredNewOptions];
+          });
+
           setIsSecondBoxVisible(true);
         }
       } catch (error) {
@@ -400,12 +692,59 @@ export default function CreateProfile() {
     }
   };
 
-  const handleAllRegionChange = async (selectedState) => {
-    setSelectedRegion(selectedState);
-    // handleRegionChange(selectedState);
+  // const handleAllRegionChange = (locationIdToRemove) => {
+  //   // Remove selected districts under the specified locationIdToRemove
+  //   console.log("locationIdToRemove", locationIdToRemove);
+  //   console.log("districtOptions", districtOptions);
+  //   if (selectedRegion === locationIdToRemove) {
+  //     setSelectedRegion(null);
+  //   }
+  //   setSelectedDistrict((prevSelectedDistricts) =>
+  //     prevSelectedDistricts.filter(
+  //       (district) =>
+  //         district.locationId &&
+  //         district.locationId.startsWith(locationIdToRemove)
+  //     )
+  //   );
+  // };
+
+  // const handleAllRegionChange = (locationIdToRemove) => {
+  //   // Remove selected districts under the specified locationIdToRemove
+  //   console.log("locationIdToRemove", locationIdToRemove);
+  //   districtOptions.forEach((option) => {
+  //     console.log("selected district parentId", option.parentId);
+  //     if (option.parentId === locationIdToRemove) {
+  //       setSelectedDistrict([]);
+  //     }
+  //   });
+  //   if (selectedRegion === locationIdToRemove) {
+  //     setSelectedRegion(null);
+  //   }
+  //   // setSelectedDistrict((prevSelectedDistricts) =>
+  //   //   prevSelectedDistricts.filter(
+  //   //     (district) =>
+  //   //       district.locationId &&
+  //   //       !district.locationId.startsWith(locationIdToRemove)
+  //   //   )
+  //   // );
+  // };
+
+  const handleAllRegionChange = (locationIdToRemove) => {
+    // Filter out districts with matching parentId
+    const updatedSelectedDistrict = allSelectedDistrict.filter(
+      (district) => district.parentId !== locationIdToRemove
+    );
+    if (selectedRegion === locationIdToRemove) {
+      setSelectedRegion(null);
+    }
+
+    // Set the updated selected districts
+    setAllSelectedDistrict(updatedSelectedDistrict);
   };
 
   const handleDistrictChange = (value) => {
+    setSelectedDistrictOptions(value);
+
     console.log(value);
     setIsThirdBoxVisible(true);
 
@@ -462,20 +801,207 @@ export default function CreateProfile() {
     });
   };
 
+  //business fifth section
+  const [businessOptions, setBusinessOptions] = useState([]);
+  const [isBusinessBoxVisible, setIsBusinessBoxVisible] = useState(false);
+  const [selectBusinessKindOptions, setSelectBusinessKindOptions] = useState(
+    []
+  );
+  const [checkKindOptions, setCheckKindOptions] = useState([]);
+  const [selectKindOptions, setSelectKindOptions] = useState([]);
+  const [selectKindOptionsChange, setSelectKindOptionsChange] = useState([]);
+
+  const fetchBusinessCategories = async () => {
+    try {
+      const response = await fetch(
+        `${config.host}/tenant/admin/v2/business/category/all`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      if (
+        data.successful &&
+        data.serviceResponse &&
+        data.serviceResponse.businessCategoryList
+      ) {
+        setBusinessOptions(data.serviceResponse.businessCategoryList);
+      }
+    } catch (error) {
+      console.error("Error fetching business categories:", error);
+    }
+  };
+
+  const handlebusinessCategoryChange = (value) => {
+    console.log(value);
+    setIsBusinessBoxVisible(true);
+    // Toggle the selection
+    setSelectBusinessKindOptions((prevSelectedCountries) => {
+      if (prevSelectedCountries.includes(value)) {
+        // If already selected, remove it
+        return prevSelectedCountries.filter((place) => place !== value);
+      } else {
+        // If not selected, add it
+        return [...prevSelectedCountries, value];
+      }
+    });
+  };
+  // const handleBusinessKindChange = async (selectedState) => {
+  //   setCheckKindOptions((prevCheckKindOptions) => {
+  //     return prevCheckKindOptions === selectedState ? null : selectedState;
+  //   });
+
+  //   if (selectedState) {
+  //     // Fetch data and update state as needed
+  //     try {
+  //       const response = await fetch(
+  //         `${config.host}/tenant/admin/v2/business/kind/all`,
+  //         {
+  //           method: "GET",
+  //           headers: {
+  //             Authorization: `Bearer ${accessToken}`,
+  //             "Content-Type": "application/json",
+  //           },
+  //         }
+  //       );
+  //       const data = await response.json();
+  //       if (
+  //         data.successful &&
+  //         data.serviceResponse &&
+  //         data.serviceResponse.businessKindList
+  //       ) {
+  //         setSelectKindOptions(data.serviceResponse.businessKindList);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching businessKind:", error);
+  //     }
+  //   }
+  // };
+
+  const fetchBusinessKind = async () => {
+    try {
+      const response = await fetch(
+        `${config.host}/tenant/admin/v2/business/kind/all`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.serviceResponse.businessKindList;
+      } else {
+        console.error("Failed to fetch business categories:", response.status);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching business categories:", error.message);
+      return [];
+    }
+  };
+  const handleBusinessKindChange = async (row) => {
+    setCheckKindOptions((prevCheckKindOptions) => {
+      return prevCheckKindOptions === row ? null : row;
+    });
+
+    let bkIdToNameMap = {};
+
+    try {
+      // Fetch business categories
+      const businessKind = await fetchBusinessKind();
+
+      // Make a GET request to fetch the detailed information for the business kind
+      const response = await fetch(
+        `${config.host}/tenant/admin/v2/business/category/${row}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const businessKindDetails = await response.json();
+
+        // Map bcId to corresponding names
+        bkIdToNameMap = businessKind.reduce((map, kind) => {
+          map[kind.bkId] = kind.name;
+          return map;
+        }, {});
+
+        // Check if bcIds is not null before mapping
+        const bkIds = businessKindDetails.serviceResponse.bkIds || [];
+
+        // Set EditRow state
+        setSelectKindOptions({
+          bkIds: bkIds,
+          bkNames: bkIds.map((bcId) => bkIdToNameMap[bcId] || "N/A"),
+        });
+        // setSelectKindOptions(bkIds);
+        // Log bcIds and bcNames
+        console.log("bkIds", bkIds);
+        console.log(
+          "bkNames",
+          bkIds.map((bcId) => bkIdToNameMap[bcId] || "N/A")
+        );
+      } else {
+        // Handle error
+        console.error(
+          "Failed to fetch business kind details:",
+          response.status
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching business kind details:", error.message);
+    }
+  };
+
+  const BusinessKindOptionsChange = (value) => {
+    console.log("Kind value", value);
+    // setIsThirdBoxVisible(true);
+
+    // Toggle the selection
+    setSelectKindOptionsChange((prevSelectedCountries) => {
+      if (prevSelectedCountries.includes(value)) {
+        // If already selected, remove it
+        return prevSelectedCountries.filter((country) => country !== value);
+      } else {
+        // If not selected, add it
+        return [...prevSelectedCountries, value];
+      }
+    });
+  };
+
+  const handleValidationFour = () => {
+    const nextSection = activeSection + 1;
+    setActiveSection(nextSection);
+    // Save the active section to local storage
+    localStorage.setItem("activeSection", nextSection);
+    window.scrollTo(350, 350);
+  };
   return (
     <>
       <div className="flex h-full">
         <div className="flex flex-1 flex-col overflow-hidden">
           <UserHeader />
-          <section className="w-full h-auto top-0 relative  lg:h-[390px] bg-[#DCDCDC]">
+          <section className="business-profile w-full h-auto top-[65px] relative lg:h-[320px]">
             <div className="containerBox relative md:left-20 lg:left-32">
-              <h1 className="font-bold text-4xl mt-[200px] text-dark">
+              <h1 className="font-bold text-4xl pt-[140px] text-dark">
                 Create Business Profile
               </h1>
             </div>
           </section>
           {/* Pipeline */}
-          <section className="bg-userTheme pt-10 sm:pt-20">
+          <section className="bg-userTheme pt-10 sm:pt-40">
             <div className="pipeline mb-40 flex justify-center items-center relative containerBox">
               {sections.map((section, index) => (
                 <div key={index} className="flex items-center">
@@ -571,7 +1097,7 @@ export default function CreateProfile() {
                       Placeholder="Enter Business Email"
                       InputType="email"
                       Inputname="business-email"
-                      ErrorMessage="Business Email cannot be empty."
+                      ErrorMessage="Business Email is not valid"
                       onChange={handleEmailChange}
                       isError={isEmailError}
                     />
@@ -609,14 +1135,12 @@ export default function CreateProfile() {
                   </div>
                   <div className="mt-10 flex justify-between w-[60%]">
                     <Dropdown
-                      options={[
-                        { label: "India", value: "India" },
-                        { label: "USA", value: "USA" },
-                      ]}
+                      options={[{ label: "India", value: "India" }]}
                       labelName="Country"
-                      placeholder="Select Country"
+                      placeholder="India"
                       id="country"
                       ErrorMessage="Select any one Country"
+                      defaultOption={{ label: "India", value: "India" }}
                       isError={isDropdownErrorCountry}
                       // onChange={handleOptionClick}
                       onSelect={(option) => {
@@ -625,52 +1149,138 @@ export default function CreateProfile() {
                       }}
                     />
                     <Dropdown
-                      options={[
-                        { label: "Bangalore", value: "Bangalore" },
-                        { label: "Chennai", value: "Chennai" },
-                      ]}
-                      labelName="City"
-                      placeholder="Select Code"
-                      id="city"
-                      ErrorMessage="Select any one City"
-                      isError={isDropdownErrorCity}
-                      onChange={handleOptionClickCity}
-                      onSelect={(option) => {
-                        console.log("Selected city:", option.label);
-                        handleOptionClickCity(option.label);
-                      }}
-                    />
-                  </div>
-                  <div className="mt-10 flex justify-between w-[60%]">
-                    <Dropdown
-                      options={[
-                        { label: "Tamil Nadu", value: "Tamil Nadu" },
-                        { label: "Kerala", value: "Kerala" },
-                      ]}
+                      options={state.map((states) => ({
+                        label: states.name,
+                        value: states.locationId,
+                      }))}
                       labelName="State"
                       placeholder="Select State"
                       id="state"
                       ErrorMessage="Select any one State"
                       isError={isDropdownErrorState}
-                      onChange={handleOptionClickState}
+                      // onChange={handleOptionClickState}
                       onSelect={(option) => {
-                        console.log("Selected State:", option.label);
-                        handleOptionClickState(option.label);
+                        console.log("Selected State:", option.value.value);
+                        handleOptionClickState(option.value.value);
                       }}
                     />
-                    <InputBox
-                      Title="Zip Code"
-                      Placeholder="Enter Zip Code"
-                      InputType="number"
-                      Inputname="business-zipCode"
-                      ErrorMessage="Zip code cannot be empty."
-                      onChange={handleZipChange}
+                  </div>
+                  <div className="mt-10 flex justify-between w-[60%]">
+                    <Dropdown
+                      options={cities.map((city) => ({
+                        label: city.name,
+                        value: city.locationId,
+                      }))}
+                      labelName="City"
+                      placeholder={
+                        isCityDropdownDisabled
+                          ? "Select City"
+                          : "First select a state"
+                      }
+                      id="city"
+                      ErrorMessage="Select any one City"
+                      isError={isDropdownErrorCity}
+                      onChange={handleOptionClickCity}
+                      onSelect={(option) => {
+                        console.log("Selected city:", option.value.value);
+                        handleOptionClickCity(option.value.value);
+                      }}
+                    />
+                    <Dropdown
+                      options={places.map((city) => ({
+                        label: city.name + " - " + city.locationId,
+                        value: city.locationId,
+                      }))}
+                      labelName="Zip Code"
+                      placeholder={
+                        isPlaceDropdownDisabled
+                          ? "Select Zip Code"
+                          : "First select a state and city"
+                      }
+                      id={`zip-code`}
+                      ErrorMessage="Select any one Pincode"
                       isError={isZipError}
-                      className="number-input"
+                      onChange={handleZipChange}
+                      onSelect={(option) => {
+                        console.log("Selected places:", option.value.value);
+                        handleZipChange(option.value.value);
+                      }}
                     />
                   </div>
+                  <p className="font-semibold text-2xl mt-12">
+                    Enter Social Links
+                  </p>
+                  <div className="relative">
+                    {socialMediaLinks.map((socialMedia, index) => (
+                      <>
+                        <div
+                          key={index}
+                          className="social-links mt-10 flex justify-between w-[60%] items-center relative"
+                        >
+                          <Dropdown
+                            options={[
+                              { label: "Instagram", value: "Instagram" },
+                              { label: "Linkedin", value: "Linkedin" },
+                              { label: "Youtube", value: "Youtube" },
+                            ]}
+                            labelName="Socail Media"
+                            placeholder="Select Social Media"
+                            id={`social-media-${index}`}
+                            ErrorMessage="Select any one social media"
+                            isError={isSocialMediaError}
+                            // onChange={handleSocialMediaOption}
+                            onChange={(type) =>
+                              handleSocialMediaOption(index, type)
+                            }
+                            onSelect={(option) => {
+                              console.log(
+                                "Selected social media:",
+                                option.label
+                              );
+                            }}
+                          />
+                          <InputBox
+                            Title="Link"
+                            Placeholder="Enter social handle link"
+                            InputType="text"
+                            Inputname={`business-media-link`}
+                            ErrorMessage="link cannot be empty."
+                            onChange={(link) =>
+                              handleMediaLinkOption(index, link)
+                            }
+                            isError={isMediaLinkError}
+                            className=""
+                          />
+                        </div>
+                        {index > 0 && (
+                          <span
+                            className="bottom-10 text-xl close-mark text-red-400 cursor-pointer"
+                            onClick={() => handleRemoveSocialMedia(index)}
+                          >
+                            x
+                          </span>
+                        )}
+                      </>
+                    ))}
+                  </div>
+                  <div>
+                    <button
+                      className="add-social-media hover:shadow-lg mt-8 text-center cursor-pointer"
+                      onClick={handleAddSocialMedia}
+                    >
+                      <img
+                        src="https://i.ibb.co/xhwrNWs/add.png"
+                        alt="add image"
+                        className="w-8 h-8 relative left-8 top-[6px]"
+                      ></img>
+                      <span className="text-center px-3 font-bold relative bottom-[20px]">
+                        Add Another Social Media
+                      </span>
+                    </button>
+                  </div>
+
                   <button
-                    className="bg-primaryColor text-white text-lg font-bold px-9 py-2 rounded-md relative left-[34.5%] mt-24"
+                    className="bg-primaryColor text-white text-lg font-bold px-6 py-2 rounded-md relative mt-24 curser-pointer"
                     onClick={handleBack}
                   >
                     <span
@@ -682,7 +1292,7 @@ export default function CreateProfile() {
                     Back{" "}
                   </button>
                   <button
-                    className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative left-[38.5%] mt-24"
+                    className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative left-[40%] mt-24 curser-pointer"
                     onClick={handleValidationTwo}
                   >
                     Continue{" "}
@@ -757,7 +1367,7 @@ export default function CreateProfile() {
                     </div>
 
                     {/* Profile section */}
-                    <div className="profile-photo-section hover:shadow-lg">
+                    <div className="profile-photo-section">
                       <p className="mb-4 font-bold text-lg">Profile Photo</p>
                       {profilePhoto ? (
                         <div className="file-input-label hover:shadow-lg">
@@ -771,12 +1381,12 @@ export default function CreateProfile() {
                               />
                               <input
                                 type="file"
-                                className="file-input pointer h-1/2"
+                                className="file-input pointer h-[45%] relative bottom-40 w-[380px]"
                                 onChange={handleProfilePhotoChange}
                               />
                             </>
                           )}
-                          <p className="text-center px-3 mt-8 font-semibold">
+                          <p className="text-center px-3 mt-8 font-semibold cursor-pointer">
                             {profilePhoto.size <= fileSizeLimit
                               ? `File selected: ${profilePhoto.name}`
                               : "Click to Upload Cover photo or Drag and Drop Here"}
@@ -815,7 +1425,7 @@ export default function CreateProfile() {
                     </div>
                   </div>
                   <button
-                    className="bg-primaryColor text-white text-lg font-bold px-9 py-2 rounded-md relative left-[40%] mt-24"
+                    className="bg-primaryColor text-white text-lg font-bold px-6 py-2 rounded-md relative mt-24 curser-pointer"
                     onClick={handleBack}
                   >
                     <span
@@ -845,6 +1455,7 @@ export default function CreateProfile() {
                   <p className="font-semibold text-2xl">Business Information</p>
                   <p className="mt-10 text-lg">Service App</p>
                   <div className="flex text-dark w-[75%] justify-between">
+                    {/* First box */}
                     <div className="first-box flex flex-col mt-5 w-[265px] rounded">
                       <div className="pb-3 flex items-center px-5 py-5 bg-[#edd2f8] ">
                         <input
@@ -898,7 +1509,7 @@ export default function CreateProfile() {
                               <input
                                 type="checkbox"
                                 name={`country-option-${location?.name}`}
-                                className="transform scale-125 cursor-pointer"
+                                className="transform scale-125 cursor-pointer "
                                 checked={selectedCountry.includes(
                                   location.name
                                 )}
@@ -947,11 +1558,17 @@ export default function CreateProfile() {
                                           //   filteredCountry.value
                                           // }
                                           onChange={() => {
-                                            handleRegionChange(
-                                              filteredCountry.name
+                                            handleAllRegionChange(
+                                              filteredCountry.locationId
+                                            );
+                                            localStorage.setItem(
+                                              "selectedCountries",
+                                              JSON.stringify(
+                                                filteredCountry.name
+                                              )
                                             );
                                             console.log(
-                                              "selected one",
+                                              "selected one for all region",
                                               filteredCountry.locationId
                                             );
                                           }}
@@ -981,6 +1598,11 @@ export default function CreateProfile() {
                                             console.log(
                                               "selected country locationId",
                                               filteredCountry.locationId
+                                            );
+                                            console.log(
+                                              "selected country checked",
+                                              selectedRegion ===
+                                                filteredCountry.locationId
                                             );
                                           }}
                                         />
@@ -1048,126 +1670,305 @@ export default function CreateProfile() {
                         ))}
                     </div>
                     {/* Third box */}
-                    <div className="third-box-container flex flex-col mt-5 bg-white overflow-y-auto h-[45%] max-h-[520px] w-[265px]">
+                    <div
+                      className={`third-box-container flex flex-col mt-5 overflow-y-auto h-[45%] max-h-[520px] w-[265px]`}
+                    >
                       {selectedDistrict &&
                         selectedDistrict.map((district, index) => (
-                          <div key={index} className="third-box-cover">
+                          <div key={index} className="third-box-cover bg-white">
                             {isThirdBoxVisible && (
-                              <div className="second-box flex flex-col mb-2 rounded">
-                                {districtOptions
+                              <div className="third-box flex flex-col rounded">
+                                {allSelectedDistrict
                                   .filter((location) => {
-                                    console.log("location-district", district);
-                                    console.log(
-                                      "location.name-district",
-                                      location.name
-                                    );
                                     return location.name === district;
                                   })
                                   .map((filteredDistrict) => (
-                                    <React.Fragment
-                                      key={filteredDistrict.locationId}
-                                    >
-                                      <div
+                                    <div className="mb-2">
+                                      <React.Fragment
                                         key={filteredDistrict.locationId}
-                                        className="pb-3 flex items-center px-5 py-5 bg-[#edd2f8]"
+                                      >
+                                        <div
+                                          key={filteredDistrict.locationId}
+                                          className="pb-3 flex items-center px-5 py-5 bg-[#edd2f8]"
+                                        >
+                                          <input
+                                            type="radio"
+                                            name={`state-${filteredDistrict?.name}`}
+                                            id={`state-${filteredDistrict?.name}`}
+                                            className="transform scale-125 cursor-pointer"
+                                            // checked={
+                                            //   selectedRegion ===
+                                            //   filteredDistrict.value
+                                            // }
+                                            onChange={() =>
+                                              handlePlaceOption(
+                                                filteredDistrict.name
+                                              )
+                                            }
+                                          />
+
+                                          <label
+                                            htmlFor={`state-${filteredDistrict.name}`}
+                                            className="ml-3 font-light cursor-pointer"
+                                          >
+                                            {`All of ${filteredDistrict.name}`}
+                                          </label>
+                                        </div>
+                                        <div className="flex items-center px-5 pb-5 bg-[#edd2f8]">
+                                          <input
+                                            type="radio"
+                                            name={`state-${filteredDistrict.name}`}
+                                            id={`choose-state-${filteredDistrict.locationId}`}
+                                            className="transform scale-125 cursor-pointer"
+                                            // checked={
+                                            //   selectedRegion ===
+                                            //   filteredDistrict.locationId
+                                            // }
+                                            onChange={() => {
+                                              handlePlaceOption(
+                                                filteredDistrict.locationId
+                                              );
+                                              console.log(
+                                                "selectedRegion1",
+                                                selectedRegion
+                                              );
+                                              console.log(
+                                                "filteredDistrict",
+                                                filteredDistrict.locationId
+                                              );
+                                              console.log(
+                                                "selected locationId for district",
+                                                filteredDistrict.locationId
+                                              );
+                                            }}
+                                          />
+                                          <label
+                                            htmlFor={`choose-state-${filteredDistrict.locationId}`}
+                                            className="ml-3 font-light cursor-pointer relative"
+                                          >
+                                            Choose Places
+                                            <FaAngleDown
+                                              className={`ml-2 transition-transform duration-300 absolute text-theme right-[-55px] h-6 top-0 ${
+                                                choosePlace ===
+                                                filteredDistrict.locationId
+                                                  ? "rotate-180"
+                                                  : ""
+                                              }`}
+                                            />
+                                          </label>
+                                        </div>
+
+                                        {/* options */}
+                                        {choosePlace ===
+                                          filteredDistrict.locationId && (
+                                          <div
+                                            className={`option flex flex-col px-5 py-5 bg-[#fff] rounded ${
+                                              choosePlace ===
+                                              filteredDistrict.locationId
+                                                ? "active"
+                                                : ""
+                                            }`}
+                                          >
+                                            {placeOptions.map(
+                                              (option, index) => (
+                                                <div
+                                                  key={index}
+                                                  className="pb-4 flex items-center transition-all delay-200 ease-in-out"
+                                                >
+                                                  <input
+                                                    type="checkbox"
+                                                    name={`country-option-${option.name}`}
+                                                    className="transform scale-125 cursor-pointer custom-checkbox relative bottom-2"
+                                                    checked={selectPlaceOptions.includes(
+                                                      option.name
+                                                    )}
+                                                    onChange={() => {
+                                                      handlePlaceChange(
+                                                        option.name
+                                                      );
+                                                      console.log(
+                                                        "selected district",
+                                                        option.locationId
+                                                      );
+                                                    }}
+                                                  />
+                                                  <label className="ml-3 font-light">
+                                                    <div>{option.name}</div>
+                                                    <div>
+                                                      {option.locationId}
+                                                    </div>
+                                                  </label>
+                                                </div>
+                                              )
+                                            )}
+                                          </div>
+                                        )}
+                                      </React.Fragment>
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                  {/* business category */}
+                  <div className="flex mt-10 items-start justify-between w-[60%]">
+                    <div>
+                      <p className="text-lg">Business Mappings</p>
+                      <div className="business-box-container flex flex-col mt-5 bg-white overflow-y-auto h-[45%] max-h-[520px]  w-[305px]">
+                        <div className="business-box-cover">
+                          <div className="business-box flex flex-col mb-2 rounded">
+                            {
+                              <>
+                                <React.Fragment>
+                                  {/* options */}
+                                  <div className="mt-3">
+                                    {businessOptions.map((option, index) => (
+                                      <div
+                                        key={index}
+                                        className="pb-4 flex items-center transition-all delay-200 ease-in-out px-5 py-1"
                                       >
                                         <input
-                                          type="radio"
-                                          name={`state-${filteredDistrict?.name}`}
-                                          id={`state-${filteredDistrict?.name}`}
-                                          className="transform scale-125 cursor-pointer"
-                                          // checked={
-                                          //   selectedRegion ===
-                                          //   filteredDistrict.value
-                                          // }
-                                          onChange={() =>
-                                            handlePlaceOption(
-                                              filteredDistrict?.name
-                                            )
-                                          }
-                                        />
-
-                                        <label
-                                          htmlFor={`state-${filteredDistrict.name}`}
-                                          className="ml-3 font-light cursor-pointer"
-                                        >
-                                          {`All of ${filteredDistrict.name}`}
-                                        </label>
-                                      </div>
-                                      <div className="flex items-center px-5 pb-5 bg-[#edd2f8]">
-                                        <input
-                                          type="radio"
-                                          name={`state-${filteredDistrict.name}`}
-                                          id={`choose-state-${filteredDistrict.locationId}`}
-                                          className="transform scale-125 cursor-pointer"
-                                          // checked={
-                                          //   selectedRegion ===
-                                          //   filteredDistrict.label
-                                          // }
+                                          type="checkbox"
+                                          name={`country-option-${option.name}`}
+                                          className="transform scale-125 cursor-pointer custom-checkbox"
                                           onChange={() => {
-                                            handlePlaceOption(
-                                              filteredDistrict.locationId
+                                            handlebusinessCategoryChange(
+                                              option.bcId
                                             );
                                             console.log(
-                                              "selected locationId for district",
-                                              filteredDistrict.locationId
+                                              "selected business category",
+                                              option.bcId
+                                            );
+                                          }}
+                                        />
+                                        <label className="ml-3 font-light">
+                                          {option.name}
+                                        </label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </React.Fragment>
+                              </>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Kind box */}
+                    <div className="kind-box-container flex flex-col mt-12 bg-white overflow-y-auto h-[45%] max-h-[520px] w-[305px]">
+                      {selectBusinessKindOptions &&
+                        selectBusinessKindOptions.map((country, index) => (
+                          <div key={index} className="kind-box-cover">
+                            {isBusinessBoxVisible && (
+                              <div className="kind-box flex flex-col mb-2 rounded">
+                                {businessOptions
+                                  .filter((location) => {
+                                    // console.log(
+                                    //   "locaation bcId",
+                                    //   location.bcId
+                                    // );
+                                    // console.log("country bcId", country);
+                                    return location.bcId === country;
+                                  })
+                                  .map((filteredCountry) => (
+                                    <React.Fragment key={filteredCountry.bcId}>
+                                      <div className="flex items-center px-5 py-5 bg-[#edd2f8] relative">
+                                        <input
+                                          type="checkbox"
+                                          name={`state-${filteredCountry.bcId}`}
+                                          id={`choose-state-${filteredCountry.bcId}`}
+                                          className="transform scale-125 cursor-pointer opacity-0 absolute w-[230px] custom-checkbox"
+                                          checked={
+                                            checkKindOptions ===
+                                            filteredCountry.bcId
+                                          }
+                                          onChange={() => {
+                                            handleBusinessKindChange(
+                                              filteredCountry.bcId
+                                            );
+                                            console.log(
+                                              "selected checkKindOptions",
+                                              checkKindOptions ===
+                                                filteredCountry.bcId
+                                            );
+                                            console.log(
+                                              "selected bcId",
+                                              filteredCountry.bcId
+                                            );
+                                            console.log(
+                                              "selected selectKindOptions",
+                                              selectKindOptions
                                             );
                                           }}
                                         />
                                         <label
-                                          htmlFor={`choose-state-${filteredDistrict.locationId}`}
-                                          className="ml-3 font-light cursor-pointer relative"
+                                          htmlFor={`choose-state-${filteredCountry.bcId}`}
+                                          className="ml-3 font-light cursor-pointer relative capitalize"
                                         >
-                                          Choose Places
-                                          <FaAngleDown
-                                            className={`ml-2 transition-transform duration-300 absolute text-theme right-[-55px] h-6 top-0 ${
-                                              choosePlace ===
-                                              filteredDistrict.locationId
-                                                ? "rotate-180"
-                                                : ""
-                                            }`}
-                                          />
+                                          {filteredCountry.name}
                                         </label>
+                                        <FaAngleDown
+                                          className={`ml-2 transition-transform duration-300 absolute text-theme right-[15px] top-[30%] h-6 ${
+                                            checkKindOptions ===
+                                            filteredCountry.bcId
+                                              ? "rotate-180"
+                                              : ""
+                                          }`}
+                                        />
                                       </div>
 
                                       {/* options */}
-                                      {choosePlace ===
-                                        filteredDistrict.locationId && (
+                                      {checkKindOptions ===
+                                        filteredCountry.bcId && (
                                         <div
-                                          className={`option flex flex-col px-5 py-5 bg-[#fff] rounded ${
-                                            choosePlace ===
-                                            filteredDistrict.locationId
+                                          className={`option flex flex-col px-5 py-5 bg-[#fff] rounded h-auto max-h-[220px] ${
+                                            checkKindOptions ===
+                                            filteredCountry.bcId
                                               ? "active"
                                               : ""
                                           }`}
                                         >
-                                          {placeOptions.map((option, index) => (
-                                            <div
-                                              key={index}
-                                              className="pb-4 flex items-center transition-all delay-200 ease-in-out"
-                                            >
-                                              <input
-                                                type="checkbox"
-                                                name={`country-option-${option.name}`}
-                                                className="transform scale-125 cursor-pointer"
-                                                checked={selectPlaceOptions.includes(
-                                                  option.name
-                                                )}
-                                                onChange={() => {
-                                                  handlePlaceChange(
-                                                    option.name
-                                                  );
-                                                  console.log(
-                                                    "selected district",
-                                                    option.locationId
-                                                  );
-                                                }}
-                                              />
-                                              <label className="ml-3 font-light">
-                                                {`${option.name} - ${option.locationId}`}
-                                              </label>
-                                            </div>
-                                          ))}
+                                          {selectKindOptions.bkNames &&
+                                            selectKindOptions.bkNames.map(
+                                              (bkName, index) => {
+                                                const selectedBkId =
+                                                  selectKindOptions.bkIds[
+                                                    index
+                                                  ];
+                                                return (
+                                                  <div
+                                                    key={index}
+                                                    className="pb-4 flex items-center transition-all delay-200 ease-in-out"
+                                                  >
+                                                    <input
+                                                      type="checkbox"
+                                                      name={`country-option-${bkName}`}
+                                                      className="transform scale-125 cursor-pointer custom-checkbox"
+                                                      onChange={() => {
+                                                        BusinessKindOptionsChange(
+                                                          selectedBkId
+                                                        );
+                                                        console.log(
+                                                          "selected bkId",
+                                                          selectedBkId
+                                                        );
+                                                      }}
+                                                      checked={selectKindOptionsChange.includes(
+                                                        selectedBkId
+                                                      )}
+                                                    />
+                                                    <label
+                                                      htmlFor={`state-${bkName}`}
+                                                      className="ml-3 font-light capitalize"
+                                                    >
+                                                      {bkName}
+                                                    </label>
+                                                  </div>
+                                                );
+                                              }
+                                            )}
                                         </div>
                                       )}
                                     </React.Fragment>
@@ -1177,6 +1978,68 @@ export default function CreateProfile() {
                           </div>
                         ))}
                     </div>
+                  </div>
+                  <button
+                    className="bg-primaryColor text-white text-lg font-bold px-6 py-2 rounded-md relative mt-24 curser-pointer"
+                    onClick={handleBack}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="transition-transform transform sm:inline-block mr-3 group-hover:translate-x-1"
+                    >
+                      &larr;
+                    </span>
+                    Back{" "}
+                  </button>
+                  <button
+                    className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative left-[46%] mt-24"
+                    onClick={handleValidationFour}
+                  >
+                    Finish{" "}
+                    <span
+                      aria-hidden="true"
+                      className="transition-transform transform sm:inline-block ml-2 group-hover:translate-x-1 relative top-[2px]"
+                    >
+                      <FaCheck />
+                    </span>
+                  </button>
+                </div>
+              )}
+              {activeSection === 5 && (
+                <div className="finish-section w-full relative flex flex-col justify-center left-[370px]">
+                  <img
+                    src="./images/success.png"
+                    alt="success-img"
+                    className="w-[300px] h=[300px]"
+                  />
+                  <p className="text-2xl w-[380px] text-center font-bold relative right-[30px]">
+                    Your business profile has been successfully created!
+                  </p>
+                  <a
+                    className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative w-[200px] mt-14 ml-14"
+                    href="./user-profile"
+                  >
+                    Go to Profile{" "}
+                    <span
+                      aria-hidden="true"
+                      className="hidden transition-transform transform sm:inline-block ml-4 group-hover:translate-x-1"
+                    >
+                      &rarr;
+                    </span>
+                  </a>
+                  <div className="w-[400px]">
+                    <button
+                      className="bg-primaryColor text-white text-lg font-bold px-[50px] py-2 rounded-md relative left-[60px] mt-10 curser-pointer"
+                      onClick={handleBack}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="transition-transform transform sm:inline-block relative right-5 group-hover:translate-x-1"
+                      >
+                        &larr;
+                      </span>
+                      Go Back{" "}
+                    </button>
                   </div>
                 </div>
               )}

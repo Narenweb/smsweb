@@ -30,7 +30,7 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   return (
     <header className="w-full">
-      <div className="relative z-10 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white shadow-sm">
+      <div className="relative  flex h-16 flex-shrink-0 border-b border-gray-200 bg-white shadow-sm">
         <button
           type="button"
           className="border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-theme md:hidden"

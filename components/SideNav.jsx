@@ -10,6 +10,7 @@ import {
   Squares2X2Icon as Squares2X2IconOutline,
   UserGroupIcon,
   XMarkIcon,
+  SideNavCustomeClass,
 } from '@heroicons/react/24/outline';
 import { Squares2X2Icon as Squares2X2IconMini } from '@heroicons/react/20/solid';
 import Link from 'next/link';

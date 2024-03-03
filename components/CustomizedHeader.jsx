@@ -2,7 +2,6 @@
 import { Fragment, useState, useEffect } from "react";
 import Link from "next/link";
 import { Disclosure, Transition, Dialog } from "@headlessui/react";
-import { useRouter } from "next/router";
 import {
   XMarkIcon,
   Bars3BottomLeftIcon,
@@ -14,14 +13,9 @@ import {
   PhotoIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/outline";
-import { FiCloudLightning } from "react-icons/fi";
 const navigation = [
-  { name: "Home", href: "#", icon: HomeIcon, current: false },
   { name: "Space", href: "#", icon: Squares2X2IconOutline, current: false },
   { name: "Celebrations", href: "#", icon: PhotoIcon, current: false },
-  { name: "Professionals", href: "#", icon: UserGroupIcon, current: false },
-  { name: "Vendors", href: "#", icon: CogIcon, current: false },
-  { name: "Blog", href: "#", icon: CogIcon, current: false },
 ];
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -29,24 +23,13 @@ function classNames(...classes) {
 const logout = () => {
   localStorage.removeItem("accessToken");
 };
-const UserHeader = ({ isLoginPage }) => {
-  // let locations = location.pathname;
-
-  // if (typeof window !== "undefined") {
-  //   locations = window.location.pathname;
-  // }
-
+const CustomizedHeader = ({ value }) => {
+  console.log("value", value);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  // const isLoginPage = locations === "/";
-  // console.log("isLoginPage", isLoginPage);
-  // Inside your component or function
-
-  // Check if the current pathname corresponds to the login page
-  // const isLoginPage = pathname === '/';
 
   return (
-    <header className={`w-full navbar-fixed`}>
-      <div className="relative z-20 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white shadow-sm">
+    <header className={`w-full`}>
+      <div className="relative flex h-16 flex-shrink-0 border-b border-gray-200 bg-white shadow-sm">
         <button
           type="button"
           className="border-r border-gray-200 bg-userTheme px-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-userTheme md:hidden"
@@ -57,93 +40,29 @@ const UserHeader = ({ isLoginPage }) => {
         </button>
         <Disclosure as="nav" className="flex justify-end w-full bg-userTheme">
           <>
-            <div className="mx-auto max-w-7xl px-2 w-full">
+            <div className="mx-auto max-w-[82rem] px-2 w-full">
               <div className="relative flex h-16 justify-between items-center">
                 <h1 className="logo text-primaryColor inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-md text-xl hover:text-gray-900 cursor-pointer font-bold">
                   <span className="text-gray-900 font-medium">SET</span>MySpace
                 </h1>
-                <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-center">
+                <div className="flex flex-1 items-center justify-center sm:items-stretch relative right-16 ">
                   <div className="hidden lg:ml-6 lg:flex lg:space-x-8 lg:justify-center lg:w-full">
                     <a
-                      href="/space"
-                      className="inline-flex items-center hover:border-primaryColor border-b border-transparent px-1 pt-1 text-md font-medium text-gray-600 hover:text-primaryColor text-sm"
-                    >
-                      Home
-                    </a>
-                    {/* <a
-                      href="/space"
-                      className="inline-flex items-center border-b border-transparent px-1 pt-1 text-md font-medium text-gray-500 hover:text-primaryColor text-sm relative group cursor-pointer mt-4"
-                    >
-                      Link Text
-                      <span className="absolute inset-x-0 bottom-0 h-0.5 bg-primaryColor transform scale-x-0 transition-transform delay-100 group-hover:scale-x-100"></span>
-                    </a> */}
-                    <a
-                      href="/space"
-                      className="inline-flex items-center hover:border-primaryColor border-b border-transparent px-1 pt-1 text-md font-medium text-gray-600 hover:text-primaryColor text-sm"
+                      href="/admin-page/business-config"
+                      className={`inline-flex items-center border-b border-transparent px-1 pt-1 text-md font-medium hover:text-primaryColor text-sm ${
+                        value === 1 ? "text-primaryColor" : "text-gray-600"
+                      }`}
                     >
                       Space
                     </a>
                     <a
-                      href="/space"
-                      className="inline-flex items-center hover:border-primaryColor border-b border-transparent px-1 pt-1 text-md font-medium text-gray-600 hover:text-primaryColor text-sm"
+                      href="/celebration"
+                      className={`inline-flex items-center border-b border-transparent px-1 pt-1 text-md font-medium hover:text-primaryColor text-sm ${
+                        value === 2 ? "text-primaryColor" : "text-gray-600"
+                      }`}
                     >
                       Celebrations
                     </a>
-                    <a
-                      href="/space"
-                      className="inline-flex items-center hover:border-primaryColor border-b border-transparent px-1 pt-1 text-md font-medium text-gray-600 hover:text-primaryColor text-sm"
-                    >
-                      Professionals
-                    </a>
-                    <a
-                      href="/space"
-                      className="inline-flex items-center hover:border-primaryColor border-b border-transparent px-1 pt-1 text-md font-medium text-gray-600 hover:text-primaryColor text-sm"
-                    >
-                      Vendors
-                    </a>
-                    <a
-                      href="/space"
-                      className="inline-flex items-center hover:border-primaryColor border-b border-transparent px-1 pt-1 text-md font-medium text-gray-600 hover:text-primaryColor text-sm"
-                    >
-                      Blog
-                    </a>
-                  </div>
-                </div>
-                <div className="absolute inset-y-0 right-0 flex items-center sm:static sm:inset-auto sm:pr-0">
-                  <div className="sm:flex lg:flex-1 lg:justify-end lg:w-full">
-                    {isLoginPage && (
-                      <div className="flex items-center">
-                        <img
-                          src="https://i.ibb.co/kSx3fkW/user.png"
-                          alt="user"
-                          border="0"
-                          className="hidden sm:block w-6 h-5 mr-1"
-                        />
-                        <Link
-                          href="/admin/login"
-                          className="hidden sm:inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-md font-medium text-dark text-xs hover:text-primaryColor"
-                          onClick={logout}
-                        >
-                          BECOME A PROFESSIONAL
-                        </Link>
-                      </div>
-                    )}
-                    {isLoginPage ? (
-                      <Link
-                        href="/user/login"
-                        className="text-md leading-6 rounded-lg px-5 py-2 text-white bg-dark relative group text-base font-bold ml-3"
-                      >
-                        Login
-                      </Link>
-                    ) : (
-                      <Link
-                        href="/admin/login"
-                        onClick={logout}
-                        className="text-md leading-6 rounded-lg px-5 py-2 text-white bg-dark relative group text-base font-bold ml-3"
-                      >
-                        Logout
-                      </Link>
-                    )}
                   </div>
                 </div>
               </div>
@@ -256,4 +175,4 @@ const UserHeader = ({ isLoginPage }) => {
   );
 };
 
-export default UserHeader;
+export default CustomizedHeader;

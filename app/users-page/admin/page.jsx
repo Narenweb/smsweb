@@ -1,10 +1,10 @@
 "use client";
-import PartnerTable from "@/components/UsersTable/PartnerTable";
 import CustomizedHeader from "@/components/CustomizedHeader";
 import CustomizedSideNav from "@/components/CustomizedSideNav";
+import AdminTable from "@/components/UsersTable/AdminTable";
 const tabs = [
-  { name: "Partner", href: "/users-page/partner", current: true },
-  { name: "Admin", href: "/users-page/admin", current: false },
+  { name: "Partner", href: "/users-page/partner", current: false },
+  { name: "Admin", href: "/users-page/admin", current: true },
 ];
 
 function classNames(...classes) {
@@ -21,12 +21,12 @@ export default function Partner() {
 
           {/* Main content */}
           <div className="flex flex-1 items-stretch overflow-hidden relative left-[4%] pt-[20px]">
-            <CustomizedSideNav value4={true} parentClass="max-h-[600px]" />
+            <CustomizedSideNav value3={true} parentClass="max-h-[600px]" />
             <main className="flex-1 overflow-y-auto">
               <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
                 <div className="flex">
                   <h1 className="flex-1 text-2xl font-semibold">
-                    Partner Settings (Temp)
+                    User Settings
                   </h1>
                 </div>
                 {/* Tabs */}
@@ -56,7 +56,7 @@ export default function Partner() {
                     </div>
                   </div>
                 </div>
-                <PartnerTable />
+                <AdminTable />
               </div>
             </main>
             {/* Right sidebar */}

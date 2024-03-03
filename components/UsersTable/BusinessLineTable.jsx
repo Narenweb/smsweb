@@ -1,9 +1,10 @@
 "use client";
-import Toggle from "./Toggle";
+import Toggle from "../Toggle";
 import React, { useState, useEffect } from "react";
 import RightSideNav from "./RightSideNav";
-import config from "./config";
+import config from "../config";
 import { useRouter } from "next/navigation";
+import { EditIcon, RightIcon, SearchIcon } from "@/app/Assets/icons";
 export default function BusinessLineTable() {
   const [people, setData] = useState([]);
   const [toggleStates, setToggleStates] = useState([]);
@@ -37,6 +38,7 @@ export default function BusinessLineTable() {
             id: item.blId,
           }))
         );
+
         setToggleStates(
           data.serviceResponse.businessLineList.map((item) => ({
             enable: item.enable, // Adjust these based on your backend structure
@@ -58,8 +60,7 @@ export default function BusinessLineTable() {
       router.push("/admin/login");
     }
     fetchData();
-  }, [accessToken]); // Empty dependency array to ensure the effect runs once when the component mounts
-
+  }, [accessToken]);
   useEffect(() => {
     // Check if running on the client side
     const storedAccessToken =
@@ -189,76 +190,114 @@ export default function BusinessLineTable() {
       console.error("Error during sync:", error.message);
     }
   };
-
+  const [searchInput, setSearchInput] = useState("");
+  const [filteredData, setFilteredData] = useState([]);
+  useEffect(() => {
+    const filtered = people.filter((item) =>
+      item.name.toLowerCase().includes(searchInput.toLowerCase())
+    );
+    setFilteredData(filtered);
+  }, [searchInput, people]);
   return (
-    <div className="px-4 sm:px-6 lg:px-8 sm:w-[80%]">
-      <div className="sm:flex sm:items-center sm:w-[80%]">
-        <div className="sm:flex-auto sm:mt-20">
-          <h1 className="text-base font-semibold leading-6 text-gray-900">
-            Line section
-          </h1>
-        </div>
-        <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-          <button type="button" className="btn-primary-sm" onClick={handleSync}>
-            Sync
-          </button>
+    <div className="pr-4 sm:pr-6 lg:pr-8 sm:w-[80%] relative">
+      <div className="absolute right-[-60px] sm:top-[-70px] lg:right-20  lg:top-[-60px]">
+        <button type="button" className="user-btn" onClick={handleSync}>
+          <span className="text-lg font-medium">Sync</span>
+        </button>
+      </div>
+      {/* search bar */}
+      <div className="search-bar w-[58%] lg:w-[38%]">
+        <div className="relative mt-5 rounded-md shadow-sm">
+          <input
+            type="text"
+            name="account-number"
+            id="account-number"
+            className="block w-full rounded-md border py-3 px-4 text-gray-900  placeholder:text-gray-400 sm:text-sm sm:leading-6 outline-none border-[#E1E1E1]"
+            placeholder="Search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+          <div className="pointer-events-none absolute inset-y-0 right-1 flex items-center pr-3">
+            <SearchIcon PathClassName="stroke-gray-400" />
+          </div>
         </div>
       </div>
-      <div className="mt-8 flow-root">
+      <div className="mt-8 flow-root pb-40">
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <table className="min-w-full divide-y divide-gray-300">
+            <table className="min-w-full divide-y divide-transparent">
               <thead>
                 <tr>
                   <th
                     scope="col"
-                    className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+                    className="py-3.5 pl-5 pr-3 text-left text-sm font-semibold text-gray-900"
                   >
                     Name
                   </th>
                   <th
                     scope="col"
-                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    className=" py-3.5 text-left text-sm font-semibold text-gray-900"
                   >
                     Enable
                   </th>
                   <th
                     scope="col"
-                    className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    className="py-3.5 text-left text-sm font-semibold text-gray-900"
                   >
                     Active
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {people.map((person, index) => (
-                  <tr key={person.id}>
-                    <td className="whitespace-nowrap py-6 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
-                      <button
-                        className="px-1 py-1 hover:bg-gray-100 rounded"
-                        onClick={() => handleShowSideNav(person.id, index)}
-                      >
-                        {person.name}
-                      </button>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                      <Toggle
-                        checked={person.enable}
-                        onToggle={(value) =>
-                          handleToggle(person.id, "enable", value)
-                        }
-                      />
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                      <Toggle
-                        checked={person.active}
-                        onToggle={(value) =>
-                          handleToggle(person.id, "active", value)
-                        }
-                      />
+              <tbody className="divide-y divide-transparent">
+                {people.filter((row) =>
+                  row.name.toLowerCase().includes(searchInput.toLowerCase())
+                ).length > 0 ? (
+                  filteredData.map((person, index) => (
+                    <tr key={person.id}>
+                      <td className="w-[25%]">
+                        <div className="mb-3 pl-4 py-[25px] bg-white border-none rounded-l-[10px] ">
+                          <button
+                            className="px-1 py-1 hover:bg-primaryColor hover:text-white rounded transition-all delay-75"
+                            onClick={() => handleShowSideNav(person.id, index)}
+                          >
+                            <span className="block max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
+                              {person.name}
+                            </span>
+                          </button>
+                        </div>
+                      </td>
+                      <td className="relative right-1 font-light w-[20%]">
+                        <div className="mb-3 py-[28.4px] bg-white pl-1">
+                          <Toggle
+                            checked={person.enable}
+                            onToggle={(value) =>
+                              handleToggle(person.id, "enable", value)
+                            }
+                          />
+                        </div>
+                      </td>
+                      <td className="relative right-2 font-light w-[20%]">
+                        <div className="mb-3 py-[28.4px] bg-white rounded-r-[10px] pl-2">
+                          <Toggle
+                            checked={person.active}
+                            onToggle={(value) =>
+                              handleToggle(person.id, "active", value)
+                            }
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="text-center py-32 text-primaryColor text-3xl"
+                    >
+                      No results found
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
             {people.map((row, index) => (

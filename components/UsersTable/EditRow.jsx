@@ -4,11 +4,12 @@
 import CustomDropdown from "./CustomDropdown";
 import TagsInput from "react-tagsinput";
 import "react-tagsinput/react-tagsinput.css";
-import Toggle from "./Toggle";
+import Toggle from "../Toggle";
 import { Fragment, useState, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import Select, { components }  from "react-select";
+import Select, { components } from "react-select";
+import CreatableSelect from "react-select/creatable";
 export default function EditRow({
   id,
   name: initialName,
@@ -35,11 +36,19 @@ export default function EditRow({
 }) {
   const [name, setName] = useState(initialName);
   const [businessLine, setBusinessLine] = useState(initialBusinessLine);
-  const formattedBcNames = bcNames.map((name) => ({ label: name }));
+  const formattedBcNames = bcNames.map((name) => ({
+    value: name,
+    label: name,
+  }));
+  //label need to be value
   const [selectedBusinessCategory, setSelectedBusinessCategory] =
-    useState(formattedBcNames);
-  console.log("bcNames123", bcNames);
-
+    useState(bcNames);
+  useEffect(() => {
+    console.log("useEffect triggered");
+    setSelectedBusinessCategory(bcNames);
+  }, []);
+  console.log("exact bcNames", bcNames);
+  console.log("formattedBcNames", formattedBcNames);
   const [enable, setEnable] = useState(initialEnable);
   const [active, setActive] = useState(initialActive);
   const [open, setOpen] = useState(false);
@@ -96,11 +105,10 @@ export default function EditRow({
     validateBusinessLine(value);
   };
   useEffect(() => {
-    // Set open to true when initial values are provided
     if (
       initialName ||
       initialBusinessLine ||
-      // InitialBusinessCategory ||
+      InitialBusinessCategory ||
       initialEnable ||
       initialActive
     ) {
@@ -135,33 +143,46 @@ export default function EditRow({
     // handleAddUpdate(enable, active, name, businessLine, selectedBusinessCategory);
   };
   const customStyles = {
-    ClearIndicator: () => null,
     control: (provided, state) => ({
       ...provided,
       position: "relative",
       left: "10%",
-      width: "330px",
+      width: "350px",
       padding: "6px",
       boxShadow: "none",
-      border: "1px solid #9ba4b0",
+      border: "1px solid #E1E1E1",
+      outline: "none",
+      borderRadius: "8px",
+      boxShadow:
+        "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)",
     }),
     menu: (provided) => ({
       ...provided,
       position: "relative",
       left: "10%",
-      width: "330px",
+      width: "350px",
+      borderRadius: "8px",
     }),
     option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isFocused ? "#8E44AD" : "inherit",
       color: state.isFocused ? "#fff" : "#000",
     }),
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: "#F6E1FF",
+      color: "#DE3163",
+      borderRadius: "100px",
+      padding: "2px 3px",
+      marginRight: "5px",
+    }),
   };
   const handleBusinessCategoryChange = (selectedOption) => {
+    console.log("selectedoptions", selectedOption);
     setSelectedBusinessCategory(selectedOption);
 
     // Extract the labels of the selected options
-    const selectedLabels = selectedOption.map((option) => option.label);
+    const selectedLabels = selectedOption.map((option) => option.bkId);
 
     // Additional logic to handle the removal of specific bcNames
     const removedBcNames = bcNames.filter((name) => {
@@ -174,9 +195,12 @@ export default function EditRow({
 
     // Use `removedBcNames` as needed
     console.log("Removed bcNames:", removedBcNames);
+    console.log("selectedLabels:", selectedLabels);
 
     // Use the updateBcNames function from props to update the bcNames state in the parent component
-    updateBcNames(selectedLabels);
+    updateBcNames(selectedOption);
+    const result = updateBcNames(selectedOption);
+    console.log("Update Bc Names Result:", result);
   };
 
   return (
@@ -185,7 +209,7 @@ export default function EditRow({
         as="div"
         className="relative z-10"
         onClose={setOpen}
-        onClick={onCancel}
+        onClick={() => setOpen(false)}
       >
         <Transition.Child
           as={Fragment}
@@ -211,15 +235,15 @@ export default function EditRow({
                 leaveFrom="translate-x-0"
                 leaveTo="translate-x-full"
               >
-                <Dialog.Panel className="pointer-events-auto w-screen max-w-2xl">
-                  <div className="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl">
+                <Dialog.Panel className="pointer-events-auto w-screen max-w-xl">
+                  <div className="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl rounded-l-3xl">
                     <div className="px-4 sm:px-6">
                       <div className="flex items-start justify-end">
                         <div className="ml-3 flex h-7 items-center">
                           <button
                             type="button"
                             className="relative rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-theme focus:ring-offset-2"
-                            onClick={onCancel}
+                            onClick={() => setOpen(false)}
                           >
                             <span className="absolute -inset-2.5" />
                             <span className="sr-only">Close panel</span>
@@ -230,31 +254,29 @@ export default function EditRow({
                     </div>
                     <div className="relative mt-6 flex-1 px-4 sm:px-6">
                       <div
-                        className={`  px-5  sm:flex lg:flex-col items-center  space-y-6 flex-col ${styles}`}
+                        className={`  px-5  sm:flex lg:flex-col items-center  space-y-10 flex-col ${styles}`}
                       >
-                        <h2 className="text-lg font-bold mb-7">
-                          {heading}
-                        </h2>
-                        <div className="mb-4 w-[70%] text-center">
-                          <label className="block text-sm font-bold mb-3 text-left ml-12 mt-8">
+                        <h2 className="text-xl font-bold">{heading}</h2>
+                        <div className="mb-4 w-[90%] text-center">
+                          <label className="block font-bold mb-3 text-left ml-12 mt-8">
                             Name
                           </label>
                           <input
                             type="text"
                             value={name}
                             onChange={(e) => handleNameChange(e.target.value)}
-                            className={`side-input border-gray-400 ${
+                            className={`side-input  border-[#E1E1E1] ${
                               nameError ? "border-red-500" : ""
                             }`}
                           />
                           {nameError && (
-                            <span className="text-red-500 inline-block">
+                            <span className="text-red-500 inline-block text-left ml-12 w-full ">
                               {nameError}
                             </span>
                           )}
                         </div>
-                        <div className="mb-4 w-[70%]">
-                          <label className="block text-sm font-bold mb-3 text-left ml-12">
+                        <div className="mb-4 w-[90%]">
+                          <label className="block font-bold mb-3 text-left ml-12">
                             Business Line
                           </label>
                           {/* <CustomDropdown
@@ -287,13 +309,13 @@ export default function EditRow({
                             }`}
                           />
                           {businessLineError && (
-                            <span className="text-red-500 mt-3 text-center block">
+                            <span className="text-red-500 inline-block text-left ml-12 w-full ">
                               {businessLineError}
                             </span>
                           )}
                         </div>
-                        <div className="mb-4 w-[70%] text-center">
-                          <label className="block text-sm font-bold mb-3 text-left ml-12 mt-3">
+                        <div className="mb-4 w-[88%] text-center">
+                          <label className="block font-bold mb-3 text-left ml-12 mt-2">
                             {business}
                           </label>
                           {/* <Select
@@ -328,12 +350,25 @@ export default function EditRow({
                                 : businessNames
                             }
                             styles={customStyles}
-                            components={{ ClearIndicator: null }} 
+                            // components={{ ClearIndicator: null }}
                           />
+                          {/* <CreatableSelect
+                            isMulti
+                            value={selectedBusinessCategory}
+                            onChange={handleBusinessCategoryChange}
+                            options={businessKindOptions}
+                            placeholder={
+                              businessKindOptions.length === 0
+                                ? "Please select the Business Line first"
+                                : businessNames
+                            }
+                            styles={customStyles}
+                            components={{ ClearIndicator: null }}
+                          /> */}
                         </div>
-                        <div className="flex flex-row md:flex-row justify-center w-[80%] mb-7 pt-5">
-                          <div className="flex items-center mb-3 mr-14">
-                            <p className="mr-2 text-sm font-bold">Enable : </p>
+                        <div className="flex flex-row md:flex-row  w-[68%] mb-7 pt-2">
+                          <div className="flex items-center mb-3 mr-6">
+                            <p className="mr-2 text-sm font-bold">Enable </p>
                             <Toggle
                               checked={toggleState.enable}
                               onToggle={(value) => {
@@ -343,7 +378,7 @@ export default function EditRow({
                             />
                           </div>
                           <div className="flex w-28 items-center mb-3">
-                            <p className="mr-2 text-sm font-bold"> Active : </p>
+                            <p className="mr-2 text-sm font-bold"> Active </p>
                             <Toggle
                               checked={toggleState.active}
                               onToggle={(value) => {
@@ -354,16 +389,16 @@ export default function EditRow({
                           </div>
                         </div>
 
-                        <div className="flex flex-row sm:flex sm:justify-end">
+                        <div className="flex flex-row sm:flex w-[90%] text-lg ml-24">
                           <button
                             onClick={handleUpdate}
-                            className=" md:mb-0 px-10 py-2 bg-theme rounded text-white mr-12 hover:bg-darkTheme"
+                            className="px-12 py-2 bg-primaryColor rounded-lg text-white mr-5 md:mb-0 hover:bg-[#dd0e49] font-semibold cursor-pointer"
                           >
                             Update
                           </button>
                           <button
-                            onClick={onCancel}
-                            className="relative focus:outline-none px-10 py-2 border-secondaryColor rounded text-secondaryColor border hover:bg-secondaryColor hover:text-white"
+                            onClick={() => setOpen(false)}
+                            className="relative focus:outline-none px-12 py-2 border-secondaryColor rounded-lg text-secondaryColor border hover:bg-secondaryColor hover:text-white"
                           >
                             Cancel
                           </button>

@@ -25,7 +25,7 @@ body {
   margin-left: auto;
   margin-right: auto;
   padding: 0 20px;
-  /* width: 100%; */
+  width: 100%;
 }
 
 .number-input::-webkit-inner-spin-button,
@@ -71,9 +71,9 @@ body {
   background-color: #fff;
   padding: 10px;
   border-radius: 8px;
-  border: 1px solid gray;
+  border: 1px solid #e1e1e1;
   margin-top: 50px;
-  color: #7c2e2e;
+  @apply shadow-xl;
 }
 .exclude-from-close {
   pointer-events: auto !important;
@@ -93,8 +93,11 @@ body {
 .btn-secondary {
   @apply flex w-full justify-center rounded-md bg-theme px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-lightTheme focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-theme;
 }
+.user-btn {
+  @apply border border-primaryColor rounded-lg pb-2 pt-2 px-5 text-primaryColor hover:bg-primaryColor hover:text-white transition-all delay-75;
+}
 .side-input {
-  @apply w-[80%] border rounded-md p-2 outline-none mb-3 py-3;
+  @apply w-[80%] border rounded-lg px-4 outline-none mb-3 py-3 shadow-md;
 }
 .navbar-fixed {
   position: fixed;
@@ -139,11 +142,29 @@ body {
   border: 2px dotted #000;
   border-radius: 8px;
 }
+.add-social-media {
+  background: rgba(142, 68, 173, 0.12);
+  padding: 8px;
+  /* display: inline-block; */
+  cursor: pointer;
+  width: 370px;
+  height: 64px;
+  border: 2px dotted #3e3d3d;
+  border-radius: 8px;
+}
 
+.close-mark {
+  position: relative;
+  right: -850px;
+}
 .file-input {
   opacity: 0;
   position: absolute;
 }
+/* .social-links > div #business-media-link-error,
+.social-links + span {
+  bottom: 100px;
+} */
 input[type="radio"],
 input[type="checkbox"] {
   accent-color: #7d309e;
@@ -155,16 +176,92 @@ input[type="checkbox"]:checked + label {
   font-weight: 500;
 }
 /* create-profile-section */
+.business-profile {
+  /* background-image: url("https://i.ibb.co/6Df7NfD/create-profile.png"); */
+  background-image: url("./Assets/create-profile.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
 .option {
   max-height: 0;
   overflow: auto;
   transition: max-height 0.5s ease-in-out;
 }
 .option::-webkit-scrollbar,
+.dropdown-options::-webkit-scrollbar,
 .second-box-container::-webkit-scrollbar,
-.third-box-container::-webkit-scrollbar  {
+.third-box-container::-webkit-scrollbar,
+.business-box-container::-webkit-scrollbar,
+.kind-box-container::-webkit-scrollbar {
   display: none;
 }
 .option.active {
   max-height: 420px;
+}
+.disabled-dropdown {
+  pointer-events: none;
+}
+
+.social-links:not(:first-child):not(:nth-child(2)) {
+  margin-top: 0px;
+}
+
+/* My profile container */
+.my-profile-hero {
+  background-image: url("./Assets/Myprofile-bg.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* CSS */
+.custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #8e44ad;
+  border-radius: 4px;
+  background-color: #fff;
+  position: relative;
+}
+
+.custom-checkbox:checked {
+  background-color: #8e44ad;
+}
+
+.custom-checkbox::after {
+  /* Styling for the checkmark */
+  content: "";
+  position: absolute;
+  top: 33%;
+  left: 25%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 4px; /* Adjust size of the checkmark */
+  height: 8px; /* Adjust size of the checkmark */
+  border: solid white; /* Change color of the checkmark */
+  border-width: 0 2px 2px 0; /* Create checkmark shape with reduced width */
+  transform-origin: bottom;
+  opacity: 0;
+}
+
+.custom-checkbox:checked::after {
+  opacity: 1;
+}
+
+/* User-my-profile */
+.profile-sec:hover > svg path {
+  fill: #8e44ad;
+}
+.active-icon {
+  fill: #8e44ad;
+}
+.hero-section {
+  background-image: url("../public/images/Landing-bg.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
