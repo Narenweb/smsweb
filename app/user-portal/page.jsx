@@ -184,7 +184,7 @@ export default function UserPortal() {
     <>
       <div className="flex h-full bg-userTheme">
         <div className="flex flex-1 flex-col overflow-hidden">
-          <UserHeader />
+          <UserHeader isLoginPage />
           {/* hero section */}
           <section className="hero-section w-full h-auto top-0 relative mb-10 sm:mb-20 lg:h-[75%] bg-userTheme">
             <div className="containerBox relative md:left-20 lg:left-32">
