@@ -116,9 +116,29 @@ export default function UserPortal() {
   const [favorites, setFavorites] = useState([]);
   const [screenWidth, setScreenWidth] = useState(null);
 
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     const newScreenWidth = window.innerWidth;
+  //     setScreenWidth(newScreenWidth);
+
+  //     const newVisibleCount = newScreenWidth >= 768 ? 13 : 5;
+  //     setVisibleCount(newVisibleCount);
+  //     setShowMoreButton(newVisibleCount < paragraphs.length);
+  //     setFullContentVisible(false);
+  //   };
+  //   if (typeof window !== "undefined") {
+  //     setScreenWidth(window.innerWidth);
+  //   }
+  //   window.addEventListener("resize", handleResize);
+  //   return () => {
+  //     window.removeEventListener("resize", handleResize);
+  //   };
+  // }, [paragraphs.length]);
+
   useEffect(() => {
     const handleResize = () => {
-      const newScreenWidth = window.innerWidth;
+      const newScreenWidth =
+        typeof window !== "undefined" ? window.innerWidth : null;
       setScreenWidth(newScreenWidth);
 
       const newVisibleCount = newScreenWidth >= 768 ? 13 : 5;
@@ -126,10 +146,14 @@ export default function UserPortal() {
       setShowMoreButton(newVisibleCount < paragraphs.length);
       setFullContentVisible(false);
     };
-    if (typeof window !== "undefined") {
-      setScreenWidth(window.innerWidth);
-    }
+
+    // Initial handleResize call
+    handleResize();
+
+    // Add event listener for window resize
     window.addEventListener("resize", handleResize);
+
+    // Cleanup: remove event listener on component unmount
     return () => {
       window.removeEventListener("resize", handleResize);
     };
