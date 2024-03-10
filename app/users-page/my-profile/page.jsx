@@ -86,7 +86,6 @@ export default function UserPortal() {
       href: "#",
       imageUrl:
         "https://images.unsplash.com/photo-1496128858413-b36217c2ce36?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=3603&q=80",
-      price: "Rs. 1900",
       category: { title: "Marketing", href: "#" },
       detail: {
         name: "Narayanan",
@@ -106,7 +105,6 @@ export default function UserPortal() {
       href: "#",
       imageUrl:
         "https://images.unsplash.com/photo-1496128858413-b36217c2ce36?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=3603&q=80",
-      price: "Rs. 2900",
       category: { title: "Marketing", href: "#" },
       detail: {
         name: "Michael Foster",
@@ -162,7 +160,7 @@ export default function UserPortal() {
                           <div className="mx-auto grid max-w-2xl grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10 sm:gap-y-10 xl:mx-0 xl:max-w-none lg:grid-cols-2 xl:grid-cols-3 ">
                             <Link
                               href="../create-profile"
-                              className="flex flex-col items-start justify-between rounded-lg  shadow-lg bg-[#f2e9f6] border-2 border-[#E4BDF4] cursor-pointer h-full max-h-[644px]"
+                              className="flex flex-col items-start justify-between rounded-lg  shadow-md bg-[#f2e9f6] border-2 border-[#E4BDF4] cursor-pointer h-full max-h-[644px]  hover:shadow-xl"
                             >
                               <div className="relative w-full flex justify-center items-center h-full flex-col">
                                 <AddUserIcon />
@@ -232,11 +230,11 @@ export default function UserPortal() {
                                           {post.title}
                                         </a>
                                       </h3>
-                                      {post.price && (
+                                      {/* {post.price && (
                                         <div className="font-bold rounded-es-xl text-white bg-lightTheme py-2 min-w-fit absolute right-0 px-5">
                                           {post.price}
                                         </div>
-                                      )}
+                                      )} */}
                                     </div>
                                     <div className="relative mt-4 flex items-center gap-x-3 pl-5">
                                       <img
@@ -289,9 +287,11 @@ export default function UserPortal() {
                                       {post.detail.desc}
                                     </p>
                                     <div className="pl-5">
-                                      <button className="text-center border border-primaryColor text-primaryColor hover:bg-primaryColor hover:text-white px-5 py-2 rounded-lg w-[94%] transition-all ease-in delay-50">
-                                        Go to Profile
-                                      </button>
+                                      <Link href="/user-profile">
+                                        <button className="text-center border border-primaryColor text-primaryColor hover:bg-primaryColor hover:text-white px-5 py-2 rounded-lg w-[94%] transition-all ease-in delay-50">
+                                          Go to Profile
+                                        </button>
+                                      </Link>
                                     </div>
                                   </div>
                                 </div>

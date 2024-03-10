@@ -13,6 +13,7 @@ import {
   ArrowLongRightIcon,
 } from "@heroicons/react/20/solid";
 import CustomSelect from "./CountDropdown";
+import LoadingIndicator from "./LoadingIndicator";
 class BusinessLine {
   constructor(blId, name, tenantId, enable, active, createdTime, updatedTime) {
     this.blId = blId;
@@ -86,9 +87,13 @@ export default function BusinessCategoryTable() {
   const [filteredData, setFilteredData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
     fetchData(currentPage, recordsPerPage);
+    fetchBusinessLineNames();
     setIsAddRowOpen(false);
     const isAuthenticated = checkAuthentication();
     if (!isAuthenticated) {
@@ -208,8 +213,6 @@ export default function BusinessCategoryTable() {
   // Fetch data
   const fetchData = async (pageNo = 1, pageSize = 20) => {
     try {
-      await fetchBusinessLineNames(); // Fetch business line names once
-
       const response = await fetch(
         `${config.host}/tenant/admin/v2/business/category/all?pageNo=${pageNo}&pageSize=${pageSize}`,
         {
@@ -349,11 +352,11 @@ export default function BusinessCategoryTable() {
           }
 
           console.log(prevStates);
-          fetchData();
           return [...prevStates];
         });
         // const work=await handleUpdate(bkId, 'enable', value);
         // console.log(work)
+        fetchData();
       } else {
         console.error("Failed to update business category:", response.status);
       }
@@ -673,7 +676,8 @@ export default function BusinessCategoryTable() {
             isSideNavOpen: false,
           },
         ]);
-
+        //Set the pagination to one
+        setCurrentPage(1);
         const { enable, active } = data.serviceResponse;
         console.log("enable from API:", enable);
         console.log("active from API:", active);
@@ -901,9 +905,16 @@ export default function BusinessCategoryTable() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-transparent">
-                  {people.filter((row) =>
-                    row.name.toLowerCase().includes(searchInput.toLowerCase())
-                  ).length > 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan="6" className="text-center py-32">
+                        {/* Loading indicator or spinner */}
+                        <LoadingIndicator />
+                      </td>
+                    </tr>
+                  ) : people.filter((row) =>
+                      row.name.toLowerCase().includes(searchInput.toLowerCase())
+                    ).length > 0 ? (
                     filteredData
                       .filter((row) =>
                         row.name
@@ -916,7 +927,7 @@ export default function BusinessCategoryTable() {
                           <td className="w-[25%]">
                             <div className="mb-3 pl-4 py-[25px] bg-white border-none rounded-l-[10px] ">
                               <button
-                                className="px-1 hover:bg-primaryColor hover:text-white rounded transition-all delay-75"
+                                className="px-1 hover:text-primaryColor rounded transition-all delay-[30]"
                                 onClick={() => handleShowSideNav(row.id)}
                               >
                                 <span className="block max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
@@ -995,68 +1006,70 @@ export default function BusinessCategoryTable() {
             </div>
           </div>
           {/* Pagination */}
-          <div className="relative">
-            <nav className="flex items-center justify-center pt-6 px-4 sm:px-0">
-              <div className="hidden md:-mt-px md:flex">
-                {/* Previous page link */}
-                <a
-                  href="javascript:void(0)"
-                  className="items-center text-sm font-medium cursor-pointer hover:bg-gray-300 rounded-full w-6 h-6 relative group mr-1"
-                  onClick={() => handlePageChange(currentPage - 1)}
-                >
-                  <span className="absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%]">
-                    <ArrowLongLeftIcon
-                      className="h-5 w-5 text-gray-400 group-hover:text-white"
-                      aria-hidden="true"
-                    />
-                  </span>
-                </a>
-                {/* Page links */}
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <a
-                      key={page}
-                      href="javascript:void(0)"
-                      className={`items-center text-sm font-medium cursor-pointer rounded-full w-6 h-6 relative mr-1 ${
-                        page === currentPage
-                          ? " text-white bg-primaryColor"
-                          : "border-transparent text-gray-500 hover:text-primaryColor hover:border-gray-300 hover:bg-gray-300"
-                      }`}
-                      onClick={() => handlePageChange(page)}
-                    >
-                      <span className="absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%]">
-                        {page}
-                      </span>
-                    </a>
-                  )
-                )}
-                {/* Next page link */}
-                <a
-                  href="javascript:void(0)"
-                  className="items-center text-sm font-medium cursor-pointer hover:bg-gray-300 rounded-full w-6 h-6 relative group"
-                  onClick={() => handlePageChange(currentPage + 1)}
-                >
-                  <span className="absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%]">
-                    <ArrowLongRightIcon
-                      className="h-5 w-5 text-gray-400 group-hover:text-white"
-                      aria-hidden="true"
-                    />
-                  </span>
-                </a>
-              </div>
-            </nav>
+          {!isLoading && (
+            <div className="relative">
+              <nav className="flex items-center justify-center pt-6 px-4 sm:px-0">
+                <div className="hidden md:-mt-px md:flex">
+                  {/* Previous page link */}
+                  <a
+                    href="javascript:void(0)"
+                    className="items-center text-sm font-medium cursor-pointer hover:bg-gray-300 rounded-full w-6 h-6 relative group mr-1"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                  >
+                    <span className="absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%]">
+                      <ArrowLongLeftIcon
+                        className="h-5 w-5 text-gray-400 group-hover:text-white"
+                        aria-hidden="true"
+                      />
+                    </span>
+                  </a>
+                  {/* Page links */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <a
+                        key={page}
+                        href="javascript:void(0)"
+                        className={`items-center text-sm font-medium cursor-pointer rounded-full w-6 h-6 relative mr-1 ${
+                          page === currentPage
+                            ? " text-white bg-primaryColor"
+                            : "border-transparent text-gray-500 hover:text-primaryColor hover:border-gray-300 hover:bg-gray-300"
+                        }`}
+                        onClick={() => handlePageChange(page)}
+                      >
+                        <span className="absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%]">
+                          {page}
+                        </span>
+                      </a>
+                    )
+                  )}
+                  {/* Next page link */}
+                  <a
+                    href="javascript:void(0)"
+                    className="items-center text-sm font-medium cursor-pointer hover:bg-gray-300 rounded-full w-6 h-6 relative group"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                  >
+                    <span className="absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%]">
+                      <ArrowLongRightIcon
+                        className="h-5 w-5 text-gray-400 group-hover:text-white"
+                        aria-hidden="true"
+                      />
+                    </span>
+                  </a>
+                </div>
+              </nav>
 
-            <div className="absolute right-4 top-5 flex items-center">
-              <p className="mr-3 text-sm font-light">Records per page</p>
-              <CustomSelect
-                options={[5, 10, 15, 20]}
-                value={recordsPerPage}
-                onChange={(value) => {
-                  handleRecordsPerPageChange(value);
-                }}
-              />
+              <div className="absolute right-4 top-5 flex items-center">
+                <p className="mr-3 text-sm font-light">Records per page</p>
+                <CustomSelect
+                  options={[5, 10, 15, 20]}
+                  value={recordsPerPage}
+                  onChange={(value) => {
+                    handleRecordsPerPageChange(value);
+                  }}
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
       {people.map((row, index) => (
@@ -1116,7 +1129,7 @@ export default function BusinessCategoryTable() {
           businessKindOptions={businessKindOptions}
           handleAddUpdate={handleAddUpdate}
           businessNames="Select Bussiness Kind"
-          addButtonName = "Category"
+          addButtonName="Category"
         />
       )}
     </>

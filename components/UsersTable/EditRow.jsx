@@ -103,7 +103,16 @@ export default function EditRow({
   const handleBusinessLineChange = (value) => {
     setBusinessLine(value);
     validateBusinessLine(value);
+    console.log("valuevalue", value);
+    //Experiemental
+    if (initialBusinessLine === value) {
+      setSelectedBusinessCategory(bcNames);
+      console.log("bcNames...", bcNames);
+    } else {
+      setSelectedBusinessCategory([]);
+    }
   };
+
   useEffect(() => {
     if (
       initialName ||
@@ -113,9 +122,11 @@ export default function EditRow({
       initialActive
     ) {
       setOpen(true);
+      fetchBusinessKindOptions(blId);
+      console.log("initialBusinessLine", initialBusinessLine);
     }
+
     // Fetch options based on the initial business line only if options are not already populated
-    fetchBusinessKindOptions(blId);
     console.log("initial business line", initialBusinessLine);
     console.log("businessLineOptions", businessLineOptions[1].value);
     // Set initial state of toggles to false

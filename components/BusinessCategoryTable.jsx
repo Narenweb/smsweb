@@ -258,7 +258,6 @@ export default function BusinessCategoryTable() {
           }
 
           console.log(prevStates);
-          fetchData();
           return [...prevStates];
         });
         // const work=await handleUpdate(bkId, 'enable', value);
@@ -582,7 +581,7 @@ export default function BusinessCategoryTable() {
 
         // Update the businessKind using the correct blId, enable, and active
         //Main table toggle
-        await handleMainToggle(id, "enable", enable);
+        // await handleMainToggle(id, "enable", enable);
         // setTimeout(() => {
         //   handleForceReload()
         // }, 500)

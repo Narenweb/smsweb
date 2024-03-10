@@ -5,12 +5,14 @@ import RightSideNav from "./RightSideNav";
 import config from "../config";
 import { useRouter } from "next/navigation";
 import { EditIcon, RightIcon, SearchIcon } from "@/app/Assets/icons";
+import LoadingIndicator from "./LoadingIndicator";
 export default function BusinessLineTable() {
   const [people, setData] = useState([]);
   const [toggleStates, setToggleStates] = useState([]);
   const [details, setDetails] = useState(null);
   // const accessToken = localStorage.getItem('accessToken');
   const [accessToken, setAccessToken] = useState({});
+  const [isMainLoading, setIsMainLoading] = useState(true);
   const router = useRouter();
   const [responseData, setResponseData] = useState(null);
   const checkAuthentication = () => {
@@ -59,6 +61,9 @@ export default function BusinessLineTable() {
     if (!isAuthenticated) {
       router.push("/admin/login");
     }
+    setTimeout(() => {
+      setIsMainLoading(false);
+    }, 2000);
     fetchData();
   }, [accessToken]);
   useEffect(() => {
@@ -146,7 +151,6 @@ export default function BusinessLineTable() {
           }
 
           console.log(prevStates);
-          fetchData();
           return [...prevStates];
         });
         // const work=await handleUpdate(bkId, 'enable', value);
@@ -158,10 +162,12 @@ export default function BusinessLineTable() {
       console.error("Error updating business kind:", error.message);
     }
   };
-
+  const [isLoading, setIsLoading] = useState(false);
   // Function to trigger synchronization
   const handleSync = async () => {
     try {
+      setIsLoading(true);
+
       // Make a request to the sync API endpoint
       const response = await fetch(
         `${config.host}/tenant/admin/v2/business/line/sync`,
@@ -188,8 +194,14 @@ export default function BusinessLineTable() {
       }
     } catch (error) {
       console.error("Error during sync:", error.message);
+    } finally {
+      // Stop loading animation after 2 seconds
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 2000);
     }
   };
+
   const [searchInput, setSearchInput] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   useEffect(() => {
@@ -201,8 +213,22 @@ export default function BusinessLineTable() {
   return (
     <div className="pr-4 sm:pr-6 lg:pr-8 sm:w-[80%] relative">
       <div className="absolute right-[-60px] sm:top-[-70px] lg:right-20  lg:top-[-60px]">
-        <button type="button" className="user-btn" onClick={handleSync}>
+        {/* <button type="button" className="user-btn" onClick={handleSync}>
           <span className="text-lg font-medium">Sync</span>
+        </button> */}
+        <button
+          type="button"
+          className="user-btn"
+          onClick={handleSync}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <span className="text-lg font-medium">
+              Syncing<span className="blinking-dots"></span>
+            </span>
+          ) : (
+            <span className="text-lg font-medium">Sync</span>
+          )}
         </button>
       </div>
       {/* search bar */}
@@ -249,15 +275,22 @@ export default function BusinessLineTable() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-transparent">
-                {people.filter((row) =>
-                  row.name.toLowerCase().includes(searchInput.toLowerCase())
-                ).length > 0 ? (
+                {isMainLoading ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-32">
+                      {/* Loading indicator or spinner */}
+                      <LoadingIndicator />
+                    </td>
+                  </tr>
+                ) : people.filter((row) =>
+                    row.name.toLowerCase().includes(searchInput.toLowerCase())
+                  ).length > 0 ? (
                   filteredData.map((person, index) => (
                     <tr key={person.id}>
                       <td className="w-[25%]">
                         <div className="mb-3 pl-4 py-[25px] bg-white border-none rounded-l-[10px] ">
                           <button
-                            className="px-1 py-1 hover:bg-primaryColor hover:text-white rounded transition-all delay-75"
+                            className="px-1 hover:text-primaryColor rounded transition-all delay-[30]"
                             onClick={() => handleShowSideNav(person.id, index)}
                           >
                             <span className="block max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">

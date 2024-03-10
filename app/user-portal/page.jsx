@@ -113,24 +113,12 @@ export default function UserPortal() {
   ];
   const [showMoreButton, setShowMoreButton] = useState(false);
   const [fullContentVisible, setFullContentVisible] = useState(false);
+  const [favorites, setFavorites] = useState([]);
   const [screenWidth, setScreenWidth] = useState(null);
-  // const screenWidth = window.innerWidth;
-  // const [screenWidth, setScreenWidth] = useState(null);
-
-  // useEffect(() => {
-  //   // Check if running on the client side
-  //   if (typeof window !== "undefined") {
-  //     // Access window properties safely
-  //     setScreenWidth(window.innerWidth);
-  //   }
-  // }, []);
-
-  // Conditionally use the location object only in the client-side context
 
   useEffect(() => {
     const handleResize = () => {
-      const newScreenWidth =
-        typeof window !== "undefined" ? window.innerWidth : null;
+      const newScreenWidth = window.innerWidth;
       setScreenWidth(newScreenWidth);
 
       const newVisibleCount = newScreenWidth >= 768 ? 13 : 5;
@@ -138,39 +126,27 @@ export default function UserPortal() {
       setShowMoreButton(newVisibleCount < paragraphs.length);
       setFullContentVisible(false);
     };
-
-    // Initial handleResize call
-    handleResize();
-
-    // Add event listener for window resize
+    if (typeof window !== "undefined") {
+      setScreenWidth(window.innerWidth);
+    }
     window.addEventListener("resize", handleResize);
-
-    // Cleanup: remove event listener on component unmount
     return () => {
       window.removeEventListener("resize", handleResize);
     };
   }, [paragraphs.length]);
 
-  // const newVisibleCount = screenWidth >= 768 ? 13 : 5;
-  // useEffect(() => {
-  //   const handleResize = () => {
-  //     setVisibleCount(newVisibleCount);
-  //     setShowMoreButton(newVisibleCount < paragraphs.length);
-  //     setFullContentVisible(false);
-  //   };
-  //   handleResize();
-  //   window.addEventListener("resize", handleResize);
-  //   return () => {
-  //     window.removeEventListener("resize", handleResize);
-  //   };
-  // }, []);
+  // Check if screenWidth is null to prevent rendering on the server-side
+  if (screenWidth === null) {
+    return null;
+  }
+
   const toggleContent = () => {
     setFullContentVisible(!fullContentVisible);
     setVisibleCount(
       fullContentVisible ? (screenWidth >= 768 ? 13 : 5) : paragraphs.length
     );
   };
-  const [favorites, setFavorites] = useState([]);
+  // const [favorites, setFavorites] = useState([]);
 
   const toggleFavorite = (postId) => {
     // Toggle the favorite status for a post
@@ -184,11 +160,11 @@ export default function UserPortal() {
     <>
       <div className="flex h-full bg-userTheme">
         <div className="flex flex-1 flex-col overflow-hidden">
-          <UserHeader isLoginPage />
+          <UserHeader />
           {/* hero section */}
-          <section className="hero-section w-full  top-0 relative mb-10 sm:mb-28 lg:max-h-[630px] bg-userTheme mt-[65px]">
+          <section className="hero-section w-full h-auto top-0 relative mb-10 sm:mb-20 lg:h-[75%] bg-userTheme">
             <div className="containerBox relative md:left-20 lg:left-32">
-              <div className=" pt-0 flex flex-col mt-36 sm:mt-20 ">
+              <div className=" pt-0 flex flex-col mt-36 sm:mt-40 ">
                 <h1 className=" font-[300] text-dark mb-5 sm:mb-10 sm:w-[55%] text-5xl leading-[1.3]">
                   We set up your space to celebrate your{" "}
                   <span className="font-bold">Birthday Party</span>

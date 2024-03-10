@@ -207,7 +207,7 @@ export default function CreateProfile() {
           setActiveSection(nextSection);
           // Save the active section to local storage
           localStorage.setItem("business-name", inputValue);
-          localStorage.setItem("activeSection", nextSection);
+          // localStorage.setItem("activeSection", nextSection);
           window.scrollTo(350, 350);
         } else {
           // Handle error response
@@ -312,58 +312,71 @@ export default function CreateProfile() {
     // setIsMediaLinkError(!isMediaLinkValid);
 
     // Check if both validations pass before moving to the next section
-    try {
-      const response = await fetch(
-        `${config.host}/tenant/admin/v2/partner/business/profile/all`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            // Add any additional headers if needed
-          },
-          body: JSON.stringify({
-            businessEmail: inputEmailValue,
-            businessPhone: inputPhoneValue,
-            businessWhatsapp: inputWhatsappValue,
-            businessAddress: inputAddressValue,
-            country: countryDefaultValue,
-            state: selectedOptionState,
-            city: selectedOptionCity,
-            zipCode: selectedOptionZip,
-          }),
-        }
-      );
-
-      if (response.ok) {
-        // Move to the next section
-        const nextSection = activeSection + 1;
-        setActiveSection(nextSection);
-        // Save the active section to local storage
-        localStorage.setItem("activeSection", nextSection);
-        window.scrollTo(350, 350);
-
-        //   // Save the active section to local storage
-        localStorage.setItem("activeSection", nextSection);
-        localStorage.setItem("business-email", inputEmailValue);
-        localStorage.setItem("business-phone", inputPhoneValue);
-        localStorage.setItem("business-whatsapp", inputWhatsappValue);
-        localStorage.setItem("business-address", inputAddressValue);
-        localStorage.setItem("business-media-link", inputMediaLinkValue);
-
-        // Store selected options in local storage
-        localStorage.setItem("selectedZip", JSON.stringify(selectedOptionZip));
-        localStorage.setItem("selectedCity", selectedOptionCity);
-        localStorage.setItem(
-          "selectedState",
-          JSON.stringify(selectedOptionState)
+    if (
+      isEmailValid &&
+      isEmail &&
+      isPhoneValid &&
+      isWhatsappValid &&
+      isAddressValid &&
+      isZipValid &&
+      isCityValid &&
+      isStateValid
+    ) {
+      try {
+        const response = await fetch(
+          `${config.host}/tenant/admin/v2/partner/business/profile/all`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+              // Add any additional headers if needed
+            },
+            body: JSON.stringify({
+              businessEmail: inputEmailValue,
+              businessPhone: inputPhoneValue,
+              businessWhatsapp: inputWhatsappValue,
+              businessAddress: inputAddressValue,
+              country: countryDefaultValue,
+              state: selectedOptionState,
+              city: selectedOptionCity,
+              zipCode: selectedOptionZip,
+            }),
+          }
         );
-      } else {
-        // Handle error response
-        console.error("Error saving data:", response.statusText);
+
+        if (response.ok) {
+          // Move to the next section
+          const nextSection = activeSection + 1;
+          setActiveSection(nextSection);
+          // Save the active section to local storage
+          window.scrollTo(350, 350);
+
+          //   // Save the active section to local storage
+          // localStorage.setItem("activeSection", nextSection);
+          localStorage.setItem("business-email", inputEmailValue);
+          localStorage.setItem("business-phone", inputPhoneValue);
+          localStorage.setItem("business-whatsapp", inputWhatsappValue);
+          localStorage.setItem("business-address", inputAddressValue);
+          localStorage.setItem("business-media-link", inputMediaLinkValue);
+
+          // Store selected options in local storage
+          localStorage.setItem(
+            "selectedZip",
+            JSON.stringify(selectedOptionZip)
+          );
+          localStorage.setItem("selectedCity", selectedOptionCity);
+          localStorage.setItem(
+            "selectedState",
+            JSON.stringify(selectedOptionState)
+          );
+        } else {
+          // Handle error response
+          console.error("Error saving data:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error saving data:", error.message);
       }
-    } catch (error) {
-      console.error("Error saving data:", error.message);
     }
     // if (
     //   isEmailValid &&
@@ -581,7 +594,7 @@ export default function CreateProfile() {
     const nextSection = activeSection + 1;
     setActiveSection(nextSection);
     // Save the active section to local storage
-    localStorage.setItem("activeSection", nextSection);
+    // localStorage.setItem("activeSection", nextSection);
     window.scrollTo(350, 350);
   };
 
@@ -625,9 +638,11 @@ export default function CreateProfile() {
   }, []);
 
   const handleStateChange = async (option) => {
-    const locations = await fetchGeoLocations();
+    const newOption = chooseState === option ? null : option;
+    const locations =
+      newOption === "chooseStates" ? await fetchGeoLocations() : [];
     setGeoLocations(locations);
-    setChooseState(option);
+    setChooseState(newOption);
     setSelectedCountry([]);
     setSelectedDistrict([]);
   };
@@ -762,7 +777,9 @@ export default function CreateProfile() {
 
   //place third section
   const handlePlaceOption = async (selectedDistrict) => {
-    setChoosePlace(selectedDistrict);
+    setChoosePlace((prevChoosePlace) => {
+      return prevChoosePlace === selectedDistrict ? null : selectedDistrict;
+    });
     setIsThirdBoxVisible(true);
     console.log("selected district by hadlePlaceOption", selectedDistrict);
     if (selectedDistrict) {
@@ -985,7 +1002,7 @@ export default function CreateProfile() {
     const nextSection = activeSection + 1;
     setActiveSection(nextSection);
     // Save the active section to local storage
-    localStorage.setItem("activeSection", nextSection);
+    // localStorage.setItem("activeSection", nextSection);
     window.scrollTo(350, 350);
   };
   return (
@@ -1487,11 +1504,17 @@ export default function CreateProfile() {
                           className="ml-3 font-light cursor-pointer relative"
                         >
                           Choose States
-                          <FaAngleDown
-                            className={`ml-2 transition-transform duration-300 absolute text-theme right-[-55px] h-6 top-0 ${
-                              chooseState === "chooseStates" ? "rotate-180" : ""
-                            }`}
-                          />
+                          <button
+                            onClick={() => handleStateChange("chooseStates")}
+                          >
+                            <FaAngleDown
+                              className={`ml-2 transition-transform duration-300 absolute text-theme right-[-55px] h-6 top-0 ${
+                                chooseState === "chooseStates"
+                                  ? "rotate-180"
+                                  : ""
+                              }`}
+                            />
+                          </button>
                         </label>
                       </div>
                       {/* options */}
@@ -1611,14 +1634,22 @@ export default function CreateProfile() {
                                           className="ml-3 font-light cursor-pointer relative"
                                         >
                                           Choose District
-                                          <FaAngleDown
-                                            className={`ml-2 transition-transform duration-300 absolute text-theme right-[-55px] h-6 top-0 ${
-                                              selectedRegion ===
-                                              filteredCountry.locationId
-                                                ? "rotate-180"
-                                                : ""
-                                            }`}
-                                          />
+                                          <button
+                                            onClick={() =>
+                                              handleRegionChange(
+                                                filteredCountry.locationId
+                                              )
+                                            }
+                                          >
+                                            <FaAngleDown
+                                              className={`ml-2 transition-transform duration-300 absolute text-theme right-[-55px] h-6 top-0 ${
+                                                selectedRegion ===
+                                                filteredCountry.locationId
+                                                  ? "rotate-180"
+                                                  : ""
+                                              }`}
+                                            />
+                                          </button>
                                         </label>
                                       </div>
 
@@ -1747,14 +1778,22 @@ export default function CreateProfile() {
                                             className="ml-3 font-light cursor-pointer relative"
                                           >
                                             Choose Places
-                                            <FaAngleDown
-                                              className={`ml-2 transition-transform duration-300 absolute text-theme right-[-55px] h-6 top-0 ${
-                                                choosePlace ===
-                                                filteredDistrict.locationId
-                                                  ? "rotate-180"
-                                                  : ""
-                                              }`}
-                                            />
+                                            <button
+                                              onClick={() =>
+                                                handlePlaceOption(
+                                                  filteredDistrict.locationId
+                                                )
+                                              }
+                                            >
+                                              <FaAngleDown
+                                                className={`ml-2 transition-transform duration-300 absolute text-theme right-[-55px] h-6 top-0 ${
+                                                  choosePlace ===
+                                                  filteredDistrict.locationId
+                                                    ? "rotate-180"
+                                                    : ""
+                                                }`}
+                                              />
+                                            </button>
                                           </label>
                                         </div>
 
@@ -1879,7 +1918,7 @@ export default function CreateProfile() {
                                           type="checkbox"
                                           name={`state-${filteredCountry.bcId}`}
                                           id={`choose-state-${filteredCountry.bcId}`}
-                                          className="transform scale-125 cursor-pointer opacity-0 absolute w-[230px] custom-checkbox"
+                                          className="transform scale-125 cursor-pointer opacity-0  custom-checkbox check"
                                           checked={
                                             checkKindOptions ===
                                             filteredCountry.bcId
@@ -1910,7 +1949,7 @@ export default function CreateProfile() {
                                           {filteredCountry.name}
                                         </label>
                                         <FaAngleDown
-                                          className={`ml-2 transition-transform duration-300 absolute text-theme right-[15px] top-[30%] h-6 ${
+                                          className={`ml-2 transition-transform duration-300 absolute text-theme right-[15px] top-[30%] h-6 pointer-events-none ${
                                             checkKindOptions ===
                                             filteredCountry.bcId
                                               ? "rotate-180"

@@ -38,7 +38,7 @@ const AddRow = ({
     setTimeout(() => {
       setOpen(true);
     }, 0);
-    fetchBusinessKindOptions("");
+    // fetchBusinessKindOptions("");
   }, []);
 
   // const [businessKindOptions, setBusinessKindOptions] = useState([]);
@@ -86,6 +86,7 @@ const AddRow = ({
   const handleBusinessLineChange = (value) => {
     setBusinessLine(value);
     validateBusinessLine(value);
+    setSelectedBusinessCategory([]);
   };
 
   // Add similar functions for other fields as needed

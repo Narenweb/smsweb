@@ -15,21 +15,29 @@ import {
   UserGroupIcon,
 } from "@heroicons/react/24/outline";
 import { FiCloudLightning } from "react-icons/fi";
-const navigation = [
-  { name: "Home", href: "#", icon: HomeIcon, current: false },
-  { name: "Space", href: "#", icon: Squares2X2IconOutline, current: false },
-  { name: "Celebrations", href: "#", icon: PhotoIcon, current: false },
-  { name: "Professionals", href: "#", icon: UserGroupIcon, current: false },
-  { name: "Vendors", href: "#", icon: CogIcon, current: false },
-  { name: "Blog", href: "#", icon: CogIcon, current: false },
-];
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 const logout = () => {
   localStorage.removeItem("accessToken");
 };
-const UserHeader = ({ isLoginPage }) => {
+const UserHeader = ({
+  isLoginPage,
+  value1,
+  value2,
+  value3,
+  value4,
+  value5,
+  value6,
+}) => {
+  const navigation = [
+    { name: "Home", href: "/", icon: HomeIcon, current: true },
+    { name: "Space", href: "#", icon: Squares2X2IconOutline, current: value2 },
+    { name: "Celebrations", href: "#", icon: PhotoIcon, current: value3 },
+    { name: "Professionals", href: "#", icon: UserGroupIcon, current: value4 },
+    { name: "Vendors", href: "#", icon: CogIcon, current: value5 },
+    { name: "Blog", href: "#", icon: CogIcon, current: value6 },
+  ];
   // let locations = location.pathname;
 
   // if (typeof window !== "undefined") {
@@ -62,52 +70,20 @@ const UserHeader = ({ isLoginPage }) => {
                 <h1 className="logo text-primaryColor inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-md text-xl hover:text-gray-900 cursor-pointer font-bold">
                   <span className="text-gray-900 font-medium">SET</span>MySpace
                 </h1>
-                <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-center">
-                  <div className="hidden lg:ml-6 lg:flex lg:space-x-8 lg:justify-center lg:w-full">
+                <div className="hidden lg:ml-6 lg:flex lg:space-x-8 lg:justify-center lg:w-[50%]">
+                  {navigation.map((item, index) => (
                     <a
-                      href="/space"
-                      className="inline-flex items-center hover:border-primaryColor border-b border-transparent px-1 pt-1 text-md font-medium text-gray-600 hover:text-primaryColor text-sm"
+                      key={index}
+                      href={item.href}
+                      className={`inline-flex items-center hover:border-primaryColor border-b border-transparent px-1 pt-1 text-md font-medium ${
+                        item.current
+                          ? "text-primaryColor"
+                          : "text-gray-600 hover:text-primaryColor"
+                      } text-sm`}
                     >
-                      Home
+                      {item.name}
                     </a>
-                    {/* <a
-                      href="/space"
-                      className="inline-flex items-center border-b border-transparent px-1 pt-1 text-md font-medium text-gray-500 hover:text-primaryColor text-sm relative group cursor-pointer mt-4"
-                    >
-                      Link Text
-                      <span className="absolute inset-x-0 bottom-0 h-0.5 bg-primaryColor transform scale-x-0 transition-transform delay-100 group-hover:scale-x-100"></span>
-                    </a> */}
-                    <a
-                      href="/space"
-                      className="inline-flex items-center hover:border-primaryColor border-b border-transparent px-1 pt-1 text-md font-medium text-gray-600 hover:text-primaryColor text-sm"
-                    >
-                      Space
-                    </a>
-                    <a
-                      href="/space"
-                      className="inline-flex items-center hover:border-primaryColor border-b border-transparent px-1 pt-1 text-md font-medium text-gray-600 hover:text-primaryColor text-sm"
-                    >
-                      Celebrations
-                    </a>
-                    <a
-                      href="/space"
-                      className="inline-flex items-center hover:border-primaryColor border-b border-transparent px-1 pt-1 text-md font-medium text-gray-600 hover:text-primaryColor text-sm"
-                    >
-                      Professionals
-                    </a>
-                    <a
-                      href="/space"
-                      className="inline-flex items-center hover:border-primaryColor border-b border-transparent px-1 pt-1 text-md font-medium text-gray-600 hover:text-primaryColor text-sm"
-                    >
-                      Vendors
-                    </a>
-                    <a
-                      href="/space"
-                      className="inline-flex items-center hover:border-primaryColor border-b border-transparent px-1 pt-1 text-md font-medium text-gray-600 hover:text-primaryColor text-sm"
-                    >
-                      Blog
-                    </a>
-                  </div>
+                  ))}
                 </div>
                 <div className="absolute inset-y-0 right-0 flex items-center sm:static sm:inset-auto sm:pr-0">
                   <div className="sm:flex lg:flex-1 lg:justify-end lg:w-full">

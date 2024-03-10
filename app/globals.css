@@ -265,3 +265,40 @@ input[type="checkbox"]:checked + label {
   background-repeat: no-repeat;
   background-size: cover;
 }
+
+/* Loading state for sync button */
+@keyframes blink {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.blinking-dots::before,
+.blinking-dots::after {
+  content: ".";
+  animation: blink 1s infinite;
+}
+
+.blinking-dots::before {
+  animation-delay: 0s;
+}
+
+.blinking-dots::after {
+  animation-delay: 0.33s;
+}
+
+.blinking-dots::last {
+  content: ".";
+  animation-delay: 0.67s;
+}
+/* Check box */
+.check {
+  width: 100% !important;
+  position: absolute;
+}
