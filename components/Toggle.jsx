@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { Switch } from '@headlessui/react';
 
 function classNames(...classes) {
@@ -6,9 +6,13 @@ function classNames(...classes) {
 }
 
 
-export default function Example({ onToggle, checked }) {
+export default function Toggle({ onToggle, checked }) {
   const [enabled, setEnabled] = useState(checked);
 
+  useEffect(() => {
+    setEnabled(checked);
+  }, [checked]);
+  
   const handleChange = () => {
     const newValue = !enabled;
     console.log('Toggle Value:', newValue);

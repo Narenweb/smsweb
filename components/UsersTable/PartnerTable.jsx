@@ -126,22 +126,25 @@ export default function PartnerTable() {
 
   const handleButtonClick = (accountId) => {
     // Construct the URL dynamically
-    const apiUrl = `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile/64d313c925885c3684512601`;
 
+    // const apiUrl = `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile/93638364-b06c-4a2d-885a-5e35cd04cc25`;
+    const apiUrl = `${config.host}/tenant/admin/v2/partner/business/profile/all`;
+    const bodyData = JSON.stringify({
+      partnerId: accountId,
+    });
     // Call the API
     fetch(apiUrl, {
-      method: "GET",
+      method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
+      body: bodyData,
     })
       .then((response) => {
         if (response.ok) {
-          // Handle successful response
           return response.json();
         } else {
-          // Handle error response
           throw new Error(
             `Failed to fetch data: ${response.status} ${response.statusText}`
           );
@@ -324,7 +327,7 @@ export default function PartnerTable() {
         });
         // const work=await handleUpdate(bkId, 'enable', value);
         // console.log(work)
-        fetchData();
+        fetchData(currentPage, recordsPerPage);
       } else {
         console.error("Failed to update business kind:", response.status);
       }
@@ -504,14 +507,14 @@ export default function PartnerTable() {
   const extractSelectedOptions = (bcIds) => {
     return bcIds ? bcIds.map((option) => option.bcId) : [];
   };
+  //Not updated
   const handleUpdate = async (
     id,
     updatedName,
     updatedBusinessLine,
     enable,
     active,
-    selectedBusinessCategory,
-    bcNames
+    selectedBusinessCategory
   ) => {
     console.log("id:", id);
     console.log("updatedBusinessLine:", updatedBusinessLine);
@@ -523,34 +526,19 @@ export default function PartnerTable() {
     );
 
     if (businessLineOption) {
-      // Fetch the existing bcIds from the API response
-      const response = await fetch(
-        `${config.host}/tenant/admin/v2/business/kind/${id}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+      // Concatenate the existing bcIds with the new ones
+      const updatedData = {
+        name: updatedName,
+        blId: businessLineOption.value,
+        enable,
+        active,
+        bcIds: selectedBusinessCategory.map((option) => option.bcId),
+        bcNames: selectedBusinessCategory.map((option) => option.label),
+      };
 
-      if (response.ok) {
-        const existingBusinessKind = await response.json();
-        const existingBcIds = existingBusinessKind.serviceResponse.bcIds || [];
-
-        // Concatenate the existing bcIds with the new ones
-        const updatedData = {
-          name: updatedName,
-          blId: businessLineOption.value,
-          enable,
-          active,
-          bcIds: [
-            ...extractSelectedOptions(selectedBusinessCategory),
-            ...existingBcIds,
-          ],
-          bcNames:
-            selectedBusinessCategory.map((option) => option.label) || bcNames,
-        };
+      try {
+        // Update the businessKind using the correct blId, enable, and active
+        await updateBusinessKind(id, businessLineOption.value, updatedData);
 
         // Update the local state immediately
         setData((prevData) =>
@@ -564,17 +552,12 @@ export default function PartnerTable() {
           )
         );
 
-        // Update the businessKind using the correct blId, enable, and active
-        await updateBusinessKind(id, businessLineOption.value, updatedData);
-
         // Close the editing mode (if any)
         setEditRow(null);
-      } else {
-        console.error(
-          "Failed to fetch business kind details:",
-          response.status
-        );
+      } catch (error) {
+        console.error("Error updating business kind:", error.message);
       }
+      fetchData(currentPage, recordsPerPage);
     } else {
       console.error(
         "Invalid business line during update:",
@@ -829,7 +812,12 @@ export default function PartnerTable() {
                             </div>
                           </td>
                           <td className="relative right-5 ">
-                            <Link href="./my-profile">
+                            <Link
+                              href={{
+                                pathname: "./my-profile",
+                                query: { accountId: row.accountId },
+                              }}
+                            >
                               <div className="py-[21.8px] mb-3 bg-white rounded-r-[10px] pr-1">
                                 <button
                                   className="px-3 rounded text-white hover:bg-gray-100 "

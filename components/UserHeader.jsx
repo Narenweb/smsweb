@@ -31,7 +31,7 @@ const UserHeader = ({
   value6,
 }) => {
   const navigation = [
-    { name: "Home", href: "/", icon: HomeIcon, current: true },
+    { name: "Home", href: "/", icon: HomeIcon, current: value1 },
     { name: "Space", href: "#", icon: Squares2X2IconOutline, current: value2 },
     { name: "Celebrations", href: "#", icon: PhotoIcon, current: value3 },
     { name: "Professionals", href: "#", icon: UserGroupIcon, current: value4 },

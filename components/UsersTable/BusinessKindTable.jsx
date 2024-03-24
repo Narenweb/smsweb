@@ -297,7 +297,7 @@ export default function BusinessKindTable() {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    fetchData(page);
+    // fetchData(page);
     scrollToTop();
   };
 
@@ -323,9 +323,7 @@ export default function BusinessKindTable() {
 
   const [editRow, setEditRow] = useState(null);
   const [isAddRowOpen, setIsAddRowOpen] = useState(false);
-  const [toggleStates, setToggleStates] = useState(
-    people.map(() => ({ enable: false, active: false }))
-  );
+  const [toggleStates, setToggleStates] = useState();
 
   const handleAddRowToggle = () => {
     setIsAddRowOpen(!isAddRowOpen);
@@ -455,21 +453,6 @@ export default function BusinessKindTable() {
     console.log("Add Toggling", { field, value });
   };
 
-  const handleToggle = (bkId, field, value) => {
-    console.log("Toggling", { bkId, field, value });
-    // setToggleStates((prevStates) => {
-    //   const updatedStates = prevStates.map((state) => {
-    //     if (state.bkId === bkId) { // Adapt this line based on the actual structure
-    //       return { ...state, [field]: value };
-    //     }
-
-    //     return state;
-    //   });
-
-    //   return updatedStates;
-    // });
-  };
-
   const handleMainToggle = async (bkId, field, value) => {
     try {
       // Make API request to update the specified field (enable or active) for the business kind
@@ -500,7 +483,7 @@ export default function BusinessKindTable() {
         });
         // const work=await handleUpdate(bkId, 'enable', value);
         // console.log(work)
-        fetchData();
+        fetchData(currentPage, recordsPerPage);
       } else {
         console.error("Failed to update business kind:", response.status);
       }
@@ -716,7 +699,6 @@ export default function BusinessKindTable() {
               option.value === updatedBusinessKind.serviceResponse.blId
           )?.label
         );
-
         // Close the editing mode (if any)
         setEditRow(null);
       } else {
@@ -822,8 +804,7 @@ export default function BusinessKindTable() {
     updatedBusinessLine,
     enable,
     active,
-    selectedBusinessCategory,
-    bcNames
+    selectedBusinessCategory
   ) => {
     console.log("id:", id);
     console.log("updatedBusinessLine:", updatedBusinessLine);
@@ -866,6 +847,7 @@ export default function BusinessKindTable() {
       } catch (error) {
         console.error("Error updating business kind:", error.message);
       }
+      fetchData(currentPage, recordsPerPage);
     } else {
       console.error(
         "Invalid business line during update:",
@@ -992,28 +974,28 @@ export default function BusinessKindTable() {
             <div className="inline-block min-w-[100%] py-2 align-middle sm:px-6 lg:px-8">
               <table className="min-w-full divide-y divide-transparent">
                 <thead>
-                  <tr className="mb-10">
+                  <tr className=" flex justify-between w-full">
                     <th
                       scope="col"
-                      className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-5"
+                      className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-5 w-[18%] lg:w-[25%]"
                     >
                       Name
                     </th>
                     <th
                       scope="col"
-                      className="py-3.5 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+                      className="py-3.5 text-left text-sm font-semibold text-gray-900 sm:pl-0 w-[20%]"
                     >
                       Business Line
                     </th>
                     <th
                       scope="col"
-                      className="px-1 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      className="px-1 py-3.5 text-left text-sm font-semibold text-gray-900 w-[14%] relative right-2 lg:right-6"
                     >
                       Enable
                     </th>
                     <th
                       scope="col"
-                      className="px-0 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      className="px-0 py-3.5 text-left text-sm font-semibold text-gray-900 w-[38%] relative right-10 lg:right-9"
                     >
                       Active
                     </th>
@@ -1041,64 +1023,55 @@ export default function BusinessKindTable() {
                       )
                       .slice(0, recordsPerPage)
                       .map((row) => (
-                        <tr key={row.id} className=" rounded-md">
+                        <tr
+                          key={row.id}
+                          className=" bg-white rounded-[10px] flex items-center justify-between py-[16px] mb-3 px-4 w-full"
+                        >
                           <td className="w-[25%]">
-                            <div className="mb-3 pl-4 py-[25px] bg-white border-none rounded-l-[10px] ">
-                              <button
-                                className="px-1 hover:text-primaryColor rounded transition-all delay-[30]"
-                                onClick={() => handleShowSideNav(row.id)}
-                              >
-                                <span className="block max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
-                                  {row.name}
-                                </span>
-                              </button>
-                            </div>
+                            <button
+                              className="px-1 hover:text-primaryColor rounded transition-all delay-[30] w-full text-left"
+                              onClick={() => handleShowSideNav(row.id)}
+                            >
+                              <span className="block lg:max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis max-w-[100px]">
+                                {row.name}
+                              </span>
+                            </button>
                           </td>
-                          <td className="relative right-1 font-light w-[20%]">
-                            <div className="mb-3 py-[25px] bg-white ">
-                              {businessLineNamesMap[row.blId] || "N/A"}
-                            </div>
+                          <td className="relative  font-light w-[35%] lg:w-[20%] text-left">
+                            {businessLineNamesMap[row.blId] || "N/A"}
                           </td>
-                          <td className="relative right-2 w-[14%]">
-                            <div className="py-[24.5px] px-3 mb-3 bg-white">
-                              <Toggle
-                                checked={row.enable}
-                                onToggle={(value) =>
-                                  handleMainToggle(row.id, "enable", value)
-                                }
-                              />
-                            </div>
+                          <td className="relative w-[14%]">
+                            <Toggle
+                              checked={row.enable}
+                              onToggle={(value) =>
+                                handleMainToggle(row.id, "enable", value)
+                              }
+                            />
                           </td>
-                          <td className="relative right-3 w-[27%]">
-                            <div className="py-[24.5px] px-3 mb-3 bg-white">
-                              <Toggle
-                                checked={row.active}
-                                onToggle={(value) =>
-                                  handleMainToggle(row.id, "active", value)
-                                }
-                              />
-                            </div>
+                          <td className="relative w-[27%]">
+                            <Toggle
+                              checked={row.active}
+                              onToggle={(value) =>
+                                handleMainToggle(row.id, "active", value)
+                              }
+                            />
                           </td>
-                          <td className="relative right-4 ">
-                            <div className="py-[16px] mb-3 bg-white pr-2">
-                              {/* Edit Icon */}
-                              <button
-                                className="px-6 py-2 text-white hover:bg-transparent border hover:border-primaryColor hover:text-primaryColor bg-primaryColor rounded-lg cursor-pointer group transition-all delay-75"
-                                onClick={() => handleEdit(row)}
-                              >
-                                <div className="flex items-center">
-                                  <span className="mr-2.5">Edit</span>
-                                  <EditIcon PathClassName="group-hover:fill-primaryColor transition-all delay-75" />
-                                </div>
-                              </button>
-                            </div>
+                          <td className="relative">
+                            {/* Edit Icon */}
+                            <button
+                              className="px-6 py-2 text-white hover:bg-transparent border hover:border-primaryColor hover:text-primaryColor bg-primaryColor rounded-lg cursor-pointer group transition-all delay-75"
+                              onClick={() => handleEdit(row)}
+                            >
+                              <div className="flex items-center">
+                                <span className="mr-2.5">Edit</span>
+                                <EditIcon PathClassName="group-hover:fill-primaryColor transition-all delay-75" />
+                              </div>
+                            </button>
                           </td>
-                          <td className="relative right-5 ">
-                            <div className="py-[21.3px] mb-3 bg-white rounded-r-[10px]">
-                              <button className="px-3 rounded text-white hover:bg-gray-100 mr-2">
-                                <RightIcon />
-                              </button>
-                            </div>
+                          <td className="relative ">
+                            <button className="px-3 rounded text-white hover:bg-gray-100 ml-2">
+                              <RightIcon />
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -1212,9 +1185,6 @@ export default function BusinessKindTable() {
               onCancel={handleCancelEdit}
               businessLineOptions={businessLineOptions}
               toggleState={toggleStates[index]}
-              onToggle={(field, value) =>
-                handleToggle(editRow.id, field, value)
-              }
               fetchBusinessKindOptions={fetchBusinessKindOptions}
               businessKindOptions={businessKindOptions}
               businessNames="Select Bussiness Category"

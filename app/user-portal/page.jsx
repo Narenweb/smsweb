@@ -1,5 +1,6 @@
 "use client";
 import UserHeader from "@/components/UserHeader";
+import Link from "next/link";
 import { MagnifyingGlassIcon, StarIcon } from "@heroicons/react/20/solid";
 import { Bars3BottomLeftIcon } from "@heroicons/react/24/outline";
 import React, { useState, useEffect } from "react";
@@ -41,7 +42,7 @@ export default function UserPortal() {
       category: { title: "Marketing", href: "#" },
       detail: {
         name: "Narayanan",
-        href: "#",
+        href: "/profile",
         rating: "4.9",
         ratingConunt: "(256)",
         city: "Tirupur",
@@ -61,7 +62,7 @@ export default function UserPortal() {
       category: { title: "Marketing", href: "#" },
       detail: {
         name: "Michael Foster",
-        href: "#",
+        href: "/profile",
         rating: "4.9",
         ratingConunt: "(256)",
         city: "Tirupur",
@@ -81,7 +82,7 @@ export default function UserPortal() {
       category: { title: "Marketing", href: "#" },
       detail: {
         name: "Michael Foster",
-        href: "#",
+        href: "/profile",
         rating: "4.9",
         ratingConunt: "(256)",
         city: "Tirupur",
@@ -100,7 +101,7 @@ export default function UserPortal() {
       category: { title: "Marketing", href: "#" },
       detail: {
         name: "Michael Foster",
-        href: "#",
+        href: "/profile",
         rating: "4.9",
         ratingConunt: "(256)",
         city: "Tirupur",
@@ -184,7 +185,7 @@ export default function UserPortal() {
     <>
       <div className="flex h-full bg-userTheme">
         <div className="flex flex-1 flex-col overflow-hidden">
-          <UserHeader isLoginPage />
+          <UserHeader isLoginPage value1={true} />
           {/* hero section */}
           <section className="hero-section w-full h-auto top-0 relative mb-10 sm:mb-20 lg:h-[75%] bg-userTheme">
             <div className="containerBox relative md:left-20 lg:left-32">
@@ -409,7 +410,11 @@ export default function UserPortal() {
                     />
                     <div className="absolute inset-0  rounded-lg ring-1 ring-inset ring-gray-900/10" />
                   </div>
-                  <div className="max-w-xl w-full hover:bg-userTheme1 cursor-pointer transition-all delay-50 ease-in">
+
+                  <Link
+                    className="max-w-xl w-full hover:bg-userTheme1 cursor-pointer transition-all delay-50 ease-in"
+                    href="/profile"
+                  >
                     <div className="group relative  pb-6 ">
                       <div className="flex relative pl-5">
                         <h3 className="text-lg mt-6 font-semibold leading-6 text-gray-900 group-hover:text-gray-600 w-[200px]">
@@ -475,12 +480,14 @@ export default function UserPortal() {
                         {post.detail.desc}
                       </p>
                       <div className="pl-5">
-                        <button className="text-center border border-primaryColor text-primaryColor hover:bg-primaryColor hover:text-white px-5 py-2 rounded-lg w-[94%] transition-all ease-in delay-50">
-                          CONTACT NOW
-                        </button>
+                        <Link href="/profile">
+                          <button className="text-center border border-primaryColor text-primaryColor hover:bg-primaryColor hover:text-white px-5 py-2 rounded-lg w-[94%] transition-all ease-in delay-50">
+                            CONTACT NOW
+                          </button>
+                        </Link>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 </article>
               ))}
             </div>

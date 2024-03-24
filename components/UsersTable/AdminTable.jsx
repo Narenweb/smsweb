@@ -292,7 +292,7 @@ export default function AdminTable() {
           return [...prevStates];
         });
         // const work=await handleUpdate(bkId, 'enable', value);
-        fetchData();
+        fetchData(currentPage, recordsPerPage);
         // console.log(work)
       } else {
         console.error("Failed to update business kind:", response.status);
@@ -473,14 +473,14 @@ export default function AdminTable() {
   const extractSelectedOptions = (bcIds) => {
     return bcIds ? bcIds.map((option) => option.bcId) : [];
   };
+  //Not updated
   const handleUpdate = async (
     id,
     updatedName,
     updatedBusinessLine,
     enable,
     active,
-    selectedBusinessCategory,
-    bcNames
+    selectedBusinessCategory
   ) => {
     console.log("id:", id);
     console.log("updatedBusinessLine:", updatedBusinessLine);
@@ -492,34 +492,19 @@ export default function AdminTable() {
     );
 
     if (businessLineOption) {
-      // Fetch the existing bcIds from the API response
-      const response = await fetch(
-        `${config.host}/tenant/admin/v2/business/kind/${id}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+      // Concatenate the existing bcIds with the new ones
+      const updatedData = {
+        name: updatedName,
+        blId: businessLineOption.value,
+        enable,
+        active,
+        bcIds: selectedBusinessCategory.map((option) => option.bcId),
+        bcNames: selectedBusinessCategory.map((option) => option.label),
+      };
 
-      if (response.ok) {
-        const existingBusinessKind = await response.json();
-        const existingBcIds = existingBusinessKind.serviceResponse.bcIds || [];
-
-        // Concatenate the existing bcIds with the new ones
-        const updatedData = {
-          name: updatedName,
-          blId: businessLineOption.value,
-          enable,
-          active,
-          bcIds: [
-            ...extractSelectedOptions(selectedBusinessCategory),
-            ...existingBcIds,
-          ],
-          bcNames:
-            selectedBusinessCategory.map((option) => option.label) || bcNames,
-        };
+      try {
+        // Update the businessKind using the correct blId, enable, and active
+        await updateBusinessKind(id, businessLineOption.value, updatedData);
 
         // Update the local state immediately
         setData((prevData) =>
@@ -533,17 +518,12 @@ export default function AdminTable() {
           )
         );
 
-        // Update the businessKind using the correct blId, enable, and active
-        await updateBusinessKind(id, businessLineOption.value, updatedData);
-
         // Close the editing mode (if any)
         setEditRow(null);
-      } else {
-        console.error(
-          "Failed to fetch business kind details:",
-          response.status
-        );
+      } catch (error) {
+        console.error("Error updating business kind:", error.message);
       }
+      fetchData(currentPage, recordsPerPage);
     } else {
       console.error(
         "Invalid business line during update:",

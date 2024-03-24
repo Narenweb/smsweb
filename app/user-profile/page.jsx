@@ -1,5 +1,6 @@
 "use client";
 import UserHeader from "@/components/UserHeader";
+import Link from "next/link";
 import { MagnifyingGlassIcon, StarIcon } from "@heroicons/react/20/solid";
 import { Bars3BottomLeftIcon } from "@heroicons/react/24/outline";
 import React, { useState, useEffect } from "react";
@@ -390,12 +391,15 @@ export default function UserPortal() {
                             <div className="mt-10">
                               <div className="mx-auto grid max-w-2xl grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10 sm:gap-y-10 xl:mx-0 xl:max-w-none lg:grid-cols-2 xl:grid-cols-3">
                                 <article className="flex flex-col items-start justify-between rounded-lg  shadow-lg bg-userTheme border-2 border-[#E4BDF4] cursor-pointer">
-                                  <div className="relative w-full flex justify-center items-center h-full flex-col">
+                                  <Link
+                                    className="relative w-full flex justify-center items-center h-full flex-col"
+                                    href="/add-product"
+                                  >
                                     <BoxIcon />
                                     <p className="text-2xl font-semibold w-[200px] text-center text-theme mt-3">
                                       + Add Another Product
                                     </p>
-                                  </div>
+                                  </Link>
                                 </article>
                                 {posts.map((post) => (
                                   <article

@@ -15,14 +15,9 @@ export default function Dropdown({
   ErrorMessage,
   id,
   defaultOption,
+  className,
 }) {
-  const [selectedOption, setSelectedOption] = useState(() => {
-    // Check local storage for previously selected option
-    const storedOption = localStorage.getItem(`${id}-selected-option`);
-    return storedOption
-      ? JSON.parse(storedOption)
-      : defaultOption || { label: "", value: "" };
-  });
+  const [selectedOption, setSelectedOption] = useState(defaultOption || { label: "", value: "" });
 
   const handleOptionClick = (option) => {
     setSelectedOption(option);
@@ -31,18 +26,14 @@ export default function Dropdown({
 
   useEffect(() => {
     // Call the onSelect callback when the selected value changes
-    onSelect({ value: selectedOption || defaultOption });
     console.log("value in dropdown component", selectedOption);
-    console.log("value in dropdown default options", defaultOption);
-    localStorage.setItem(
-      `${id}-selected-option`,
-      JSON.stringify(selectedOption)
-    );
-  }, [selectedOption, onSelect, id]);
-  const isOptionSelected = selectedOption.value !== "";
+  }, [selectedOption]);
+
+  const isOptionSelected = selectedOption?.value !== "";
+
   return (
     <div>
-      <Menu as="div" className="relative inline-block text-left">
+      <Menu as="div" className={`relative inline-block text-left ${className}`}>
         <div>
           <label className="block font-medium leading-6 text-gray-900">
             {labelName}
@@ -55,7 +46,7 @@ export default function Dropdown({
                 : "ring-[#E1E1E1]"
             } hover:bg-gray-50 pl-5 w-[370px] mt-3`}
           >
-            {selectedOption.label || placeholder}
+            {selectedOption?.label || placeholder}
             <ChevronDownIcon
               className="-mr-1 h-5 w-5 text-gray-400"
               aria-hidden="true"

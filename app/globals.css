@@ -130,6 +130,9 @@ body {
 .input-box::placeholder {
   color: #767676;
 }
+.input-box-place::placeholder {
+  font-size: 15px;
+}
 /* tailwind.css */
 
 .file-input-label {
@@ -141,6 +144,9 @@ body {
   height: 170px;
   border: 2px dotted #000;
   border-radius: 8px;
+}
+.image-input {
+  background: rgba(142, 68, 173, 0.12);
 }
 .add-social-media {
   background: rgba(142, 68, 173, 0.12);
@@ -301,4 +307,19 @@ input[type="checkbox"]:checked + label {
 .check {
   width: 100% !important;
   position: absolute;
+}
+.clamp-3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* Add product section */
+.add-product {
+  background-image: url("./Assets/add-product.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }

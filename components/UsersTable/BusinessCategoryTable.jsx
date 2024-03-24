@@ -356,7 +356,7 @@ export default function BusinessCategoryTable() {
         });
         // const work=await handleUpdate(bkId, 'enable', value);
         // console.log(work)
-        fetchData();
+        fetchData(currentPage, recordsPerPage);
       } else {
         console.error("Failed to update business category:", response.status);
       }
@@ -621,6 +621,7 @@ export default function BusinessCategoryTable() {
       } catch (error) {
         console.error("Error updating business category:", error.message);
       }
+      fetchData(currentPage, recordsPerPage);
     } else {
       console.error(
         "Invalid business line during update:",

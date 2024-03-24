@@ -155,6 +155,7 @@ export default function BusinessLineTable() {
         });
         // const work=await handleUpdate(bkId, 'enable', value);
         // console.log(work)
+        fetchData();
       } else {
         console.error("Failed to update business kind:", response.status);
       }
@@ -253,22 +254,22 @@ export default function BusinessLineTable() {
           <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
             <table className="min-w-full divide-y divide-transparent">
               <thead>
-                <tr>
+                <tr className="flex justify-between">
                   <th
                     scope="col"
-                    className="py-3.5 pl-5 pr-3 text-left text-sm font-semibold text-gray-900"
+                    className="py-3.5 pl-5 pr-3 text-left text-sm font-semibold text-gray-900 w-[25%]"
                   >
                     Name
                   </th>
                   <th
                     scope="col"
-                    className=" py-3.5 text-left text-sm font-semibold text-gray-900"
+                    className=" py-3.5 text-left text-sm font-semibold text-gray-900 w-[20%]"
                   >
                     Enable
                   </th>
                   <th
                     scope="col"
-                    className="py-3.5 text-left text-sm font-semibold text-gray-900"
+                    className="py-3.5 relative right-3 text-left text-sm font-semibold text-gray-900 w-[20%]"
                   >
                     Active
                   </th>
@@ -287,38 +288,42 @@ export default function BusinessLineTable() {
                   ).length > 0 ? (
                   filteredData.map((person, index) => (
                     <tr key={person.id}>
-                      <td className="w-[25%]">
-                        <div className="mb-3 pl-4 py-[25px] bg-white border-none rounded-l-[10px] ">
-                          <button
-                            className="px-1 hover:text-primaryColor rounded transition-all delay-[30]"
-                            onClick={() => handleShowSideNav(person.id, index)}
-                          >
-                            <span className="block max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
-                              {person.name}
-                            </span>
-                          </button>
-                        </div>
-                      </td>
-                      <td className="relative right-1 font-light w-[20%]">
-                        <div className="mb-3 py-[28.4px] bg-white pl-1">
-                          <Toggle
-                            checked={person.enable}
-                            onToggle={(value) =>
-                              handleToggle(person.id, "enable", value)
-                            }
-                          />
-                        </div>
-                      </td>
-                      <td className="relative right-2 font-light w-[20%]">
-                        <div className="mb-3 py-[28.4px] bg-white rounded-r-[10px] pl-2">
+                      <div className="bg-white rounded-[10px] flex items-center justify-between py-[25px] mb-3 px-4 w-full">
+                        <td className="w-[25%]">
+                          <div className=" ">
+                            <button
+                              className="px-1 hover:text-primaryColor rounded transition-all delay-[30]"
+                              onClick={() =>
+                                handleShowSideNav(person.id, index)
+                              }
+                            >
+                              <span className="block max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                {person.name}
+                              </span>
+                            </button>
+                          </div>
+                        </td>
+                        <td className="relative right-1 font-light w-[20%]">
+                          <div className="">
+                            <Toggle
+                              checked={person.enable}
+                              onToggle={(value) =>
+                                handleToggle(person.id, "enable", value)
+                              }
+                            />
+                          </div>
+                        </td>
+                        <td className="relative right-2 font-light w-[20%]">
+                          {/* <div className=""> */}
                           <Toggle
                             checked={person.active}
                             onToggle={(value) =>
                               handleToggle(person.id, "active", value)
                             }
                           />
-                        </div>
-                      </td>
+                          {/* </div> */}
+                        </td>
+                      </div>
                     </tr>
                   ))
                 ) : (

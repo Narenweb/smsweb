@@ -3,6 +3,7 @@ import UserHeader from "@/components/UserHeader";
 import { MagnifyingGlassIcon, StarIcon } from "@heroicons/react/20/solid";
 import { Bars3BottomLeftIcon } from "@heroicons/react/24/outline";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Testimonials from "@/components/Carousel";
 import UserFooter from "@/components/UserFooter";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -21,7 +22,22 @@ import CustomizedSideNav from "@/components/CustomizedSideNav";
 import Image from "next/image";
 import { ArrowLongLeftIcon } from "@heroicons/react/20/solid";
 // import "../Assets";
-export default function UserPortal() {
+export default function Myprofile() {
+  const router = useRouter();
+  const [accountIds, setAccountId] = useState(null);
+
+  useEffect(() => {
+    // Accessing window.location.search to get the query string part of the URL
+    const queryString = window.location.search;
+
+    // Using URLSearchParams to parse the query string and get the value of the 'accountId' parameter
+    const urlParams = new URLSearchParams(queryString);
+    const accountIdParam = urlParams.get("accountId");
+
+    // Setting the value of accountId in the component state
+    setAccountId(accountIdParam);
+  }, []);
+  console.log("accountId-myprofile", accountIds);
   const [activeSection, setActiveSection] = useState(
     (typeof window !== "undefined" &&
       sessionStorage.getItem("activeSection")) ||
@@ -119,6 +135,7 @@ export default function UserPortal() {
       labels: ["New Arrival"],
     },
   ];
+
   return (
     <>
       <div className="flex h-full bg-userTheme">
@@ -159,7 +176,10 @@ export default function UserPortal() {
                         <div className="mt-10">
                           <div className="mx-auto grid max-w-2xl grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10 sm:gap-y-10 xl:mx-0 xl:max-w-none lg:grid-cols-2 xl:grid-cols-3 ">
                             <Link
-                              href="../create-profile"
+                              href={{
+                                pathname: "../create-profile",
+                                query: { accountId: accountIds },
+                              }}
                               className="flex flex-col items-start justify-between rounded-lg  shadow-md bg-[#f2e9f6] border-2 border-[#E4BDF4] cursor-pointer h-full max-h-[644px]  hover:shadow-xl"
                             >
                               <div className="relative w-full flex justify-center items-center h-full flex-col">
@@ -287,7 +307,11 @@ export default function UserPortal() {
                                       {post.detail.desc}
                                     </p>
                                     <div className="pl-5">
-                                      <Link href="/user-profile">
+                                      <Link
+                                        href={{
+                                          pathname: "/user-profile",
+                                        }}
+                                      >
                                         <button className="text-center border border-primaryColor text-primaryColor hover:bg-primaryColor hover:text-white px-5 py-2 rounded-lg w-[94%] transition-all ease-in delay-50">
                                           Go to Profile
                                         </button>

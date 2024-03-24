@@ -33,6 +33,7 @@ export default function EditRow({
   businessNames,
   bcNames,
   updateBcNames,
+  enableToggle,
 }) {
   const [name, setName] = useState(initialName);
   const [businessLine, setBusinessLine] = useState(initialBusinessLine);
@@ -140,6 +141,7 @@ export default function EditRow({
   const handleUpdate = () => {
     const isNameValid = validateName(name);
     const isBusinessLineValid = validateBusinessLine(businessLine);
+  
     if (isNameValid && isBusinessLineValid) {
       handleUpdateRow(
         id,
@@ -383,17 +385,16 @@ export default function EditRow({
                             <Toggle
                               checked={toggleState.enable}
                               onToggle={(value) => {
-                                onToggle("enable", value);
                                 setEnable(value);
                               }}
                             />
+                            {/* {enableToggle} */}
                           </div>
                           <div className="flex w-28 items-center mb-3">
                             <p className="mr-2 text-sm font-bold"> Active </p>
                             <Toggle
                               checked={toggleState.active}
                               onToggle={(value) => {
-                                onToggle("active", value);
                                 setActive(value);
                               }}
                             />

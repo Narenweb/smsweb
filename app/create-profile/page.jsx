@@ -172,46 +172,158 @@ export default function CreateProfile() {
   //     window.scrollTo(350, 350);
   //   }
   // };
+
+  const [accountId, setAccountId] = useState(null);
+
+  useEffect(() => {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const accountIdParam = urlParams.get("accountId");
+    setAccountId(accountIdParam);
+  }, []);
+
+  useEffect(() => {
+    console.log("accountId", accountId); // Log the updated state value here
+  }, [accountId]);
+
+  // const handleValidationOne = async () => {
+  //   const inputValue = document.getElementById("business-name").value;
+  //   const isNameValid = inputValue.trim() !== "";
+  //   setIsError(!isNameValid);
+  //   // Check if the business line is valid
+  //   const selectedOption = selectedOptions.options;
+  //   console.log("Selected Option:", selectedOption);
+  //   const isBusinessLineValid = selectedOption !== null;
+  //   setIsDropdownError(!isBusinessLineValid);
+
+  //   // Check if both validations pass before moving to the next section
+  //   if (isNameValid && isBusinessLineValid) {
+  //     try {
+  //       const response = await fetch(
+  //         `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile`,
+  //         {
+  //           method: "POST",
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //             Authorization: `Bearer ${accessToken}`,
+  //           },
+  //           body: JSON.stringify({
+  //             businessName: inputValue,
+  //             businessLine: selectedOption,
+  //           }),
+  //         }
+  //       );
+
+  //       if (response.ok) {
+  //         // Move to the next section
+  //         const nextSection = activeSection + 1;
+  //         setActiveSection(nextSection);
+  //         // Save the active section to local storage
+  //         // localStorage.setItem("business-name", inputValue);
+  //         // localStorage.setItem("activeSection", nextSection);
+  //         window.scrollTo(350, 350);
+  //       } else {
+  //         // Handle error response
+  //         console.error("Error saving data:", response.statusText);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error saving data:", error.message);
+  //     }
+  //   }
+  // };
+  const [isDataSubmitted, setIsDataSubmitted] = useState(false);
+  const [businessProfileId, setBusinessProfileId] = useState(null);
+
+  // let businessProfileId = null;
+
+  const getAllPartner = async () => {
+    try {
+      if (businessProfileId !== null) {
+        // If ID is already fetched, return it directly
+        return businessProfileId;
+      }
+
+      const bodyData = JSON.stringify({
+        partnerId: accountId,
+      });
+
+      const response = await fetch(
+        `${config.host}/tenant/admin/v2/partner/business/profile/all`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: bodyData,
+        }
+      );
+
+      if (response.ok) {
+        const responseData = await response.json();
+        const businessProfileList =
+          responseData.serviceResponse.businessProfileList;
+        const newBusinessProfileId = businessProfileList[0].id; // Store the ID for future use
+        setBusinessProfileId(newBusinessProfileId); // Update state with the fetched ID
+        console.log("businessProfileId", newBusinessProfileId);
+        return newBusinessProfileId;
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error.message);
+    }
+  };
+
   const handleValidationOne = async () => {
     const inputValue = document.getElementById("business-name").value;
     const isNameValid = inputValue.trim() !== "";
     setIsError(!isNameValid);
-
     // Check if the business line is valid
     const selectedOption = selectedOptions.options;
     console.log("Selected Option:", selectedOption);
     const isBusinessLineValid = selectedOption !== null;
     setIsDropdownError(!isBusinessLineValid);
-
-    // Check if both validations pass before moving to the next section
     if (isNameValid && isBusinessLineValid) {
       try {
-        const response = await fetch(
-          `${config.host}/tenant/admin/v2/partner/business/profile/all`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-              businessName: inputValue,
-              businessLine: selectedOption,
-            }),
-          }
-        );
+        let apiUrl = `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile`;
+        let method = "POST";
 
+        // Check if data has been submitted before
+        if (isDataSubmitted) {
+          const profileId = await getAllPartner();
+          if (!profileId) {
+            console.error("Failed to get business profile ID");
+            return;
+          }
+          // Use PUT API
+          apiUrl += `/${profileId}`;
+          method = "PUT";
+        }
+
+        const response = await fetch(apiUrl, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            businessName: inputValue,
+            businessLine: selectedOption,
+          }),
+        });
         if (response.ok) {
           // Move to the next section
           const nextSection = activeSection + 1;
           setActiveSection(nextSection);
           // Save the active section to local storage
-          localStorage.setItem("business-name", inputValue);
+          // localStorage.setItem("business-name", inputValue);
           // localStorage.setItem("activeSection", nextSection);
           window.scrollTo(350, 350);
         } else {
           // Handle error response
           console.error("Error saving data:", response.statusText);
+        }
+        if (!isDataSubmitted) {
+          setIsDataSubmitted(true);
         }
       } catch (error) {
         console.error("Error saving data:", error.message);
@@ -223,25 +335,23 @@ export default function CreateProfile() {
     // Check if the component is in the first section
     if (activeSection === 1) {
       // Retrieve values from local storage
-      const storedName = localStorage.getItem("business-name") || "";
-
+      // const storedName = localStorage.getItem("business-name") || "";
       // Set the business name in the input box
-      document.getElementById("business-name").value = storedName;
+      // document.getElementById("business-name").value = storedName;
     }
     if (activeSection === 2) {
       // Retrieve values from local storage
-      const storedEmail = localStorage.getItem("business-email") || "";
-      const storedPhone = localStorage.getItem("business-phone") || "";
-      const storedWhatsapp = localStorage.getItem("business-whatsapp") || "";
-      const storedAddress = localStorage.getItem("business-address") || "";
-      const storedMediaLink = localStorage.getItem("business-media-link") || "";
-
+      // const storedEmail = localStorage.getItem("business-email") || "";
+      // const storedPhone = localStorage.getItem("business-phone") || "";
+      // const storedWhatsapp = localStorage.getItem("business-whatsapp") || "";
+      // const storedAddress = localStorage.getItem("business-address") || "";
+      // const storedMediaLink = localStorage.getItem("business-media-link") || "";
       // Set the business name in the input box
-      document.getElementById("business-email").value = storedEmail;
-      document.getElementById("business-phone").value = storedPhone;
-      document.getElementById("business-whatsapp").value = storedWhatsapp;
-      document.getElementById("business-address").value = storedAddress;
-      document.getElementById("business-media-link").value = storedMediaLink;
+      // document.getElementById("business-email").value = storedEmail;
+      // document.getElementById("business-phone").value = storedPhone;
+      // document.getElementById("business-whatsapp").value = storedWhatsapp;
+      // document.getElementById("business-address").value = storedAddress;
+      // document.getElementById("business-media-link").value = storedMediaLink;
     }
   }, [activeSection]);
 
@@ -277,7 +387,7 @@ export default function CreateProfile() {
     const selectedOptionZip = selectedPlaceOption;
     const selectedOptionCity = selectedPlace;
     const selectedOptionState = selectedState;
-    localStorage.setItem("selectedState", JSON.stringify(selectedOptionState));
+    // localStorage.setItem("selectedState", JSON.stringify(selectedOptionState));
     const isZipValid = selectedOptionZip !== "";
     setIsZipError(!isZipValid);
     console.log("Selected Option Zipcode:", selectedOptionZip);
@@ -312,72 +422,6 @@ export default function CreateProfile() {
     // setIsMediaLinkError(!isMediaLinkValid);
 
     // Check if both validations pass before moving to the next section
-    if (
-      isEmailValid &&
-      isEmail &&
-      isPhoneValid &&
-      isWhatsappValid &&
-      isAddressValid &&
-      isZipValid &&
-      isCityValid &&
-      isStateValid
-    ) {
-      try {
-        const response = await fetch(
-          `${config.host}/tenant/admin/v2/partner/business/profile/all`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-              // Add any additional headers if needed
-            },
-            body: JSON.stringify({
-              businessEmail: inputEmailValue,
-              businessPhone: inputPhoneValue,
-              businessWhatsapp: inputWhatsappValue,
-              businessAddress: inputAddressValue,
-              country: countryDefaultValue,
-              state: selectedOptionState,
-              city: selectedOptionCity,
-              zipCode: selectedOptionZip,
-            }),
-          }
-        );
-
-        if (response.ok) {
-          // Move to the next section
-          const nextSection = activeSection + 1;
-          setActiveSection(nextSection);
-          // Save the active section to local storage
-          window.scrollTo(350, 350);
-
-          //   // Save the active section to local storage
-          // localStorage.setItem("activeSection", nextSection);
-          localStorage.setItem("business-email", inputEmailValue);
-          localStorage.setItem("business-phone", inputPhoneValue);
-          localStorage.setItem("business-whatsapp", inputWhatsappValue);
-          localStorage.setItem("business-address", inputAddressValue);
-          localStorage.setItem("business-media-link", inputMediaLinkValue);
-
-          // Store selected options in local storage
-          localStorage.setItem(
-            "selectedZip",
-            JSON.stringify(selectedOptionZip)
-          );
-          localStorage.setItem("selectedCity", selectedOptionCity);
-          localStorage.setItem(
-            "selectedState",
-            JSON.stringify(selectedOptionState)
-          );
-        } else {
-          // Handle error response
-          console.error("Error saving data:", response.statusText);
-        }
-      } catch (error) {
-        console.error("Error saving data:", error.message);
-      }
-    }
     // if (
     //   isEmailValid &&
     //   isEmail &&
@@ -388,38 +432,86 @@ export default function CreateProfile() {
     //   isCityValid &&
     //   isStateValid
     // ) {
-    //   // Move to the next section
-    //   const nextSection = activeSection + 1;
-    //   setActiveSection(nextSection);
-    //   // Save the active section to local storage
-    //   localStorage.setItem("activeSection", nextSection);
-    //   localStorage.setItem("business-email", inputEmailValue);
-    //   localStorage.setItem("business-phone", inputPhoneValue);
-    //   localStorage.setItem("business-whatsapp", inputWhatsappValue);
-    //   localStorage.setItem("business-address", inputAddressValue);
-    //   localStorage.setItem("business-media-link", inputMediaLinkValue);
+    try {
+      const profileId = await getAllPartner();
+      const response = await fetch(
+        `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile/${profileId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            // Add any additional headers if needed
+          },
+          body: JSON.stringify({
+            businessEmail: inputEmailValue,
+            businessPhone: inputPhoneValue,
+            businessWhatsapp: inputWhatsappValue,
+            businessAddress: inputAddressValue,
+            country: countryDefaultValue,
+            state: selectedOptionState,
+            city: selectedOptionCity,
+            zipCode: selectedOptionZip,
+          }),
+        }
+      );
 
-    //   // Store selected options in local storage
-    //   localStorage.setItem("selectedZip", JSON.stringify(selectedOptionZip));
-    //   localStorage.setItem("selectedCity", selectedOptionCity);
-    //   localStorage.setItem(
-    //     "selectedState",
-    //     JSON.stringify(selectedOptionState)
-    //   );
-    //   window.scrollTo(350, 350);
-    // }
+      if (response.ok) {
+        // Move to the next section
+        const nextSection = activeSection + 1;
+        setActiveSection(nextSection);
+        // Save the active section to local storage
+        window.scrollTo(350, 350);
+
+        //   // Save the active section to local storage
+        // localStorage.setItem("activeSection", nextSection);
+        // localStorage.setItem("business-email", inputEmailValue);
+        // localStorage.setItem("business-phone", inputPhoneValue);
+        // localStorage.setItem("business-whatsapp", inputWhatsappValue);
+        // localStorage.setItem("business-address", inputAddressValue);
+        // localStorage.setItem("business-media-link", inputMediaLinkValue);
+
+        // // Store selected options in local storage
+        // localStorage.setItem("selectedZip", JSON.stringify(selectedOptionZip));
+        // localStorage.setItem("selectedCity", selectedOptionCity);
+        // localStorage.setItem(
+        //   "selectedState",
+        //   JSON.stringify(selectedOptionState)
+        // );
+      } else {
+        // Handle error response
+        console.error("Error saving data:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error saving data:", error.message);
+    }
   };
 
+  // };
+
+  const [businessName, setBusinessName] = useState(null);
   //firstSection
-  const handleChange = () => {
+  const handleChange = (e) => {
     // Clear the error when the user starts typing
+    setBusinessName(e.target.value);
     setIsError(false);
   };
+  const [selectedOption, setSelectedOption] = useState({
+    label: "",
+    value: "",
+  });
+
   const handleOptionClick = (selectedLabel) => {
-    // Check if the selected option is different from the current state
+    // Find the selected option based on the label
+
+    console.log("selectedOption", selectedLabel);
+    // Update the selected option state with the entire object
     const selectedOption = businessLineOptions.find(
       (option) => option.label === selectedLabel
     );
+    setSelectedOption(selectedLabel);
+
+    // If needed, update any other state based on the selected option
     if (selectedOption) {
       setSelectedOptions({
         options: selectedOption.label,
@@ -428,16 +520,26 @@ export default function CreateProfile() {
   };
 
   //SecondSection
-  const handleEmailChange = () => {
+
+  const [businessEmail, setBusinessEmail] = useState(null);
+  const [businessPhone, setBusinessPhone] = useState(null);
+  const [businessWhatsapp, setBusinessWhatsapp] = useState(null);
+  const [businessAddress, setBusinessAddress] = useState(null);
+  const [businessLink, setBusinessLink] = useState(null);
+  const handleEmailChange = (e) => {
+    setBusinessEmail(e.target.value);
     setIsEmailError(false);
   };
-  const handlePhoneChange = () => {
+  const handlePhoneChange = (e) => {
+    setBusinessPhone(e.target.value);
     setIsPhoneError(false);
   };
-  const handleWhatsappChange = () => {
+  const handleWhatsappChange = (e) => {
+    setBusinessWhatsapp(e.target.value);
     setIsWhatsappError(false);
   };
-  const handleAddressChange = () => {
+  const handleAddressChange = (e) => {
+    setBusinessAddress(e.target.value);
     setIsAddressError(false);
   };
   // const handleZipChange = () => {
@@ -548,14 +650,17 @@ export default function CreateProfile() {
       });
     }
   };
-  const handleMediaLinkOption = (index, link) => {
+  const handleMediaLinkOption = (e, index, link) => {
+    setBusinessLink(e.target.value); // Update business email state
     setSocialMediaLinks((prevLinks) => {
       const updatedLinks = [...prevLinks];
+      // Update the link of the specified index in the socialMediaLinks array
       updatedLinks[index].link = link;
       return updatedLinks;
     });
-    setIsMediaLinkError(false);
+    setIsMediaLinkError(false); // Clear media link error
   };
+
   const handleRemoveSocialMedia = (index) => {
     setSocialMediaLinks((prevLinks) => {
       const updatedLinks = [...prevLinks];
@@ -573,15 +678,23 @@ export default function CreateProfile() {
   //Third section Media
   const [coverPhoto, setCoverPhoto] = useState(null);
   const [profilePhoto, setProfilePhoto] = useState(null);
+
   const handleCoverPhotoChange = (e) => {
     const file = e.target.files[0];
+    console.log("Selected cover photo:", file);
     setCoverPhoto(file);
   };
+  useEffect(() => {
+    console.log("Profile photo state:", profilePhoto);
+    console.log("Cover photo state:", coverPhoto);
+  }, [profilePhoto, coverPhoto]);
 
   const handleProfilePhotoChange = (e) => {
     const file = e.target.files[0];
+    console.log("Selected profile photo:", file);
     setProfilePhoto(file);
   };
+
   const handleDeleteCoverPhoto = () => {
     setCoverPhoto(null);
   };
@@ -590,12 +703,44 @@ export default function CreateProfile() {
   };
   const fileSizeLimit = 5 * 1024 * 1024;
 
-  const handleValidationThree = () => {
+  const handleValidationThree = async () => {
     const nextSection = activeSection + 1;
     setActiveSection(nextSection);
-    // Save the active section to local storage
-    // localStorage.setItem("activeSection", nextSection);
-    window.scrollTo(350, 350);
+    try {
+      const profileId = await getAllPartner();
+
+      const formData = new FormData();
+      formData.append("profileImages", profilePhoto);
+      formData.append("coverImages", coverPhoto);
+
+      const response = await fetch(
+        `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile/${profileId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: formData,
+          // body: JSON.stringify({
+          //   profileImages: profilePhoto,
+          //   coverImages: coverPhoto,
+          // }),
+        }
+      );
+
+      if (response.ok) {
+        // Move to the next section
+        const nextSection = activeSection + 1;
+        setActiveSection(nextSection);
+        // Save the active section to local storage
+        window.scrollTo(350, 350);
+      } else {
+        // Handle error response
+        console.error("Error saving data:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error saving data:", error.message);
+    }
   };
 
   //Fourth section Business
@@ -662,6 +807,13 @@ export default function CreateProfile() {
       }
     });
   };
+  const handleToggleDropdown = (e) => {
+    e.stopPropagation(); // Prevents the event from bubbling up
+    setChooseState((prevState) =>
+      prevState === "chooseStates" ? null : "chooseStates"
+    );
+  };
+
   const [allSelectedDistrict, setAllSelectedDistrict] = useState([]);
   //districtbox-second section
   //New changes with prop
@@ -1063,265 +1215,276 @@ export default function CreateProfile() {
 
             {/* Details */}
             <div className="flex relative left-[150px] mb-40 containerBox">
-              {activeSection === 1 && (
-                <div className="general-information section w-full ml-20">
-                  <p className="font-semibold text-2xl">General Information</p>
-                  <div className="mt-10 flex justify-between w-[60%]">
-                    <InputBox
-                      Title="Business Name"
-                      Placeholder="Enter Business Name"
-                      InputType="text"
-                      Inputname="business-name"
-                      ErrorMessage="Business Name cannot be empty."
-                      onChange={handleChange}
-                      isError={isError}
-                    />
+              {/* {activeSection === 1 && ( */}
+              {/* Section 1 */}
+              <div
+                className={`general-information section w-full ml-20 ${
+                  activeSection === 1 ? "block" : "hidden"
+                }`}
+              >
+                <p className="font-semibold text-2xl">General Information</p>
+                <div className="mt-10 flex justify-between w-[60%]">
+                  <InputBox
+                    Title="Business Name"
+                    Placeholder="Enter Business Name"
+                    InputType="text"
+                    Inputname="business-name"
+                    ErrorMessage="Business Name cannot be empty."
+                    onChange={handleChange}
+                    isError={isError}
+                    value={businessName}
+                  />
 
-                    <Dropdown
-                      options={businessLineOptions}
-                      labelName="Business Line"
-                      placeholder="Select Business Line"
-                      id="business-line"
-                      ErrorMessage="Select any one Business Line"
-                      isError={isDropdownError}
-                      // onChange={handleOptionClick}
-                      onSelect={(option) => {
-                        console.log("Option in select:", option.label);
-                        handleOptionClick(option.label);
-                      }}
-                    />
-                  </div>
-                  <button
-                    className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative left-[48%] mt-24"
-                    onClick={handleValidationOne}
-                  >
-                    Continue{" "}
-                    <span
-                      aria-hidden="true"
-                      className="hidden transition-transform transform sm:inline-block ml-2 group-hover:translate-x-1"
-                    >
-                      &rarr;
-                    </span>
-                  </button>
+                  <Dropdown
+                    options={businessLineOptions}
+                    labelName="Business Line"
+                    placeholder="Select Business Line"
+                    id="business-line"
+                    ErrorMessage="Select any one Business Line"
+                    isError={isDropdownError}
+                    // onChange={handleOptionClick}
+                    defaultOption={selectedOption}
+                    onSelect={(option) => {
+                      console.log("Option in select:", option.label);
+                      handleOptionClick(option.label);
+                    }}
+                  />
                 </div>
-              )}
-              {activeSection === 2 && (
-                <div className="general-information section w-full left-[60px] relative">
-                  <p className="font-semibold text-2xl">Contact Information</p>
-                  <div className="mt-10 flex justify-between w-[60%]">
-                    <InputBox
-                      Title="Business Email"
-                      Placeholder="Enter Business Email"
-                      InputType="email"
-                      Inputname="business-email"
-                      ErrorMessage="Business Email is not valid"
-                      onChange={handleEmailChange}
-                      isError={isEmailError}
-                    />
-                    <InputBox
-                      Title="Business Phone"
-                      Placeholder="Enter Business Phone"
-                      InputType="number"
-                      Inputname="business-phone"
-                      ErrorMessage="Business Phone cannot be empty."
-                      onChange={handlePhoneChange}
-                      isError={isPhoneError}
-                      className="number-input"
-                    />
-                  </div>
-                  <div className="mt-10 flex justify-between w-[60%]">
-                    <InputBox
-                      Title="Business Whatsapp"
-                      Placeholder="Enter Business Whatsapp"
-                      InputType="number"
-                      Inputname="business-whatsapp"
-                      ErrorMessage="Business whatsapp cannot be empty."
-                      onChange={handleWhatsappChange}
-                      isError={isWhatsappError}
-                      className="number-input"
-                    />
-                    <InputBox
-                      Title="Business Address"
-                      Placeholder="Enter Business Address"
-                      InputType="text"
-                      Inputname="business-address"
-                      ErrorMessage="Business address cannot be empty."
-                      onChange={handleAddressChange}
-                      isError={isAddressError}
-                    />
-                  </div>
-                  <div className="mt-10 flex justify-between w-[60%]">
-                    <Dropdown
-                      options={[{ label: "India", value: "India" }]}
-                      labelName="Country"
-                      placeholder="India"
-                      id="country"
-                      ErrorMessage="Select any one Country"
-                      defaultOption={{ label: "India", value: "India" }}
-                      isError={isDropdownErrorCountry}
-                      // onChange={handleOptionClick}
-                      onSelect={(option) => {
-                        console.log("Option in country:", option.label);
-                        handleOptionClickCountry(option.label);
-                      }}
-                    />
-                    <Dropdown
-                      options={state.map((states) => ({
-                        label: states.name,
-                        value: states.locationId,
-                      }))}
-                      labelName="State"
-                      placeholder="Select State"
-                      id="state"
-                      ErrorMessage="Select any one State"
-                      isError={isDropdownErrorState}
-                      // onChange={handleOptionClickState}
-                      onSelect={(option) => {
-                        console.log("Selected State:", option.value.value);
-                        handleOptionClickState(option.value.value);
-                      }}
-                    />
-                  </div>
-                  <div className="mt-10 flex justify-between w-[60%]">
-                    <Dropdown
-                      options={cities.map((city) => ({
-                        label: city.name,
-                        value: city.locationId,
-                      }))}
-                      labelName="City"
-                      placeholder={
-                        isCityDropdownDisabled
-                          ? "Select City"
-                          : "First select a state"
-                      }
-                      id="city"
-                      ErrorMessage="Select any one City"
-                      isError={isDropdownErrorCity}
-                      onChange={handleOptionClickCity}
-                      onSelect={(option) => {
-                        console.log("Selected city:", option.value.value);
-                        handleOptionClickCity(option.value.value);
-                      }}
-                    />
-                    <Dropdown
-                      options={places.map((city) => ({
-                        label: city.name + " - " + city.locationId,
-                        value: city.locationId,
-                      }))}
-                      labelName="Zip Code"
-                      placeholder={
-                        isPlaceDropdownDisabled
-                          ? "Select Zip Code"
-                          : "First select a state and city"
-                      }
-                      id={`zip-code`}
-                      ErrorMessage="Select any one Pincode"
-                      isError={isZipError}
-                      onChange={handleZipChange}
-                      onSelect={(option) => {
-                        console.log("Selected places:", option.value.value);
-                        handleZipChange(option.value.value);
-                      }}
-                    />
-                  </div>
-                  <p className="font-semibold text-2xl mt-12">
-                    Enter Social Links
-                  </p>
-                  <div className="relative">
-                    {socialMediaLinks.map((socialMedia, index) => (
-                      <>
-                        <div
-                          key={index}
-                          className="social-links mt-10 flex justify-between w-[60%] items-center relative"
+                <button
+                  className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative left-[48%] mt-24"
+                  onClick={handleValidationOne}
+                >
+                  Continue{" "}
+                  <span
+                    aria-hidden="true"
+                    className="hidden transition-transform transform sm:inline-block ml-2 group-hover:translate-x-1"
+                  >
+                    &rarr;
+                  </span>
+                </button>
+              </div>
+              {/* )} */}
+              {/* {activeSection === 2 && ( */}
+              {/* Section 2 */}
+              <div
+                className={`general-information section w-full ml-20 left-[60px] relative ${
+                  activeSection === 2 ? "block" : "hidden"
+                }`}
+              >
+                <p className="font-semibold text-2xl">Contact Information</p>
+                <div className="mt-10 flex justify-between w-[60%]">
+                  <InputBox
+                    Title="Business Email"
+                    Placeholder="Enter Business Email"
+                    InputType="email"
+                    Inputname="business-email"
+                    ErrorMessage="Business Email is not valid"
+                    onChange={handleEmailChange}
+                    value={businessEmail}
+                    // isError={isEmailError}
+                  />
+                  <InputBox
+                    Title="Business Phone"
+                    Placeholder="Enter Business Phone"
+                    InputType="number"
+                    Inputname="business-phone"
+                    ErrorMessage="Business Phone cannot be empty."
+                    onChange={handlePhoneChange}
+                    // isError={isPhoneError}
+                    className="number-input"
+                    value={businessPhone}
+                  />
+                </div>
+                <div className="mt-10 flex justify-between w-[60%]">
+                  <InputBox
+                    Title="Business Whatsapp"
+                    Placeholder="Enter Business Whatsapp"
+                    InputType="number"
+                    Inputname="business-whatsapp"
+                    ErrorMessage="Business whatsapp cannot be empty."
+                    onChange={handleWhatsappChange}
+                    // isError={isWhatsappError}
+                    className="number-input"
+                    value={businessWhatsapp}
+                  />
+                  <InputBox
+                    Title="Business Address"
+                    Placeholder="Enter Business Address"
+                    InputType="text"
+                    Inputname="business-address"
+                    ErrorMessage="Business address cannot be empty."
+                    onChange={handleAddressChange}
+                    // isError={isAddressError}
+                    value={businessAddress}
+                  />
+                </div>
+                <div className="mt-10 flex justify-between w-[60%]">
+                  <Dropdown
+                    options={[{ label: "India", value: "India" }]}
+                    labelName="Country"
+                    placeholder="India"
+                    id="country"
+                    ErrorMessage="Select any one Country"
+                    defaultOption={{ label: "India", value: "India" }}
+                    // isError={isDropdownErrorCountry}
+                    // onChange={handleOptionClick}
+                    onSelect={(option) => {
+                      console.log("Option in country:", option.label);
+                      handleOptionClickCountry(option.label);
+                    }}
+                  />
+                  <Dropdown
+                    options={state.map((states) => ({
+                      label: states.name,
+                      value: states.locationId,
+                    }))}
+                    labelName="State"
+                    placeholder="Select State"
+                    id="state"
+                    ErrorMessage="Select any one State"
+                    // isError={isDropdownErrorState}
+                    // onChange={handleOptionClickState}
+                    onSelect={(option) => {
+                      console.log("Selected State:", option.value);
+                      handleOptionClickState(option.value);
+                    }}
+                  />
+                </div>
+                <div className="mt-10 flex justify-between w-[60%]">
+                  <Dropdown
+                    options={cities.map((city) => ({
+                      label: city.name,
+                      value: city.locationId,
+                    }))}
+                    labelName="City"
+                    placeholder={
+                      isCityDropdownDisabled
+                        ? "Select City"
+                        : "First select a state"
+                    }
+                    id="city"
+                    ErrorMessage="Select any one City"
+                    // isError={isDropdownErrorCity}
+                    onChange={handleOptionClickCity}
+                    onSelect={(option) => {
+                      console.log("Selected city:", option.value);
+                      handleOptionClickCity(option.value);
+                    }}
+                  />
+                  <Dropdown
+                    options={places.map((city) => ({
+                      label: city.name + " - " + city.locationId,
+                      value: city.locationId,
+                    }))}
+                    labelName="Zip Code"
+                    placeholder={
+                      isPlaceDropdownDisabled
+                        ? "Select Zip Code"
+                        : "First select a state and city"
+                    }
+                    id={`zip-code`}
+                    ErrorMessage="Select any one Pincode"
+                    // isError={isZipError}
+                    onChange={handleZipChange}
+                    onSelect={(option) => {
+                      console.log("Selected places:", option.value);
+                      handleZipChange(option.value);
+                    }}
+                  />
+                </div>
+                <p className="font-semibold text-2xl mt-12">
+                  Enter Social Links
+                </p>
+                <div className="relative">
+                  {socialMediaLinks.map((socialMedia, index) => (
+                    <>
+                      <div
+                        key={index}
+                        className="social-links mt-10 flex justify-between w-[60%] items-center relative"
+                      >
+                        <Dropdown
+                          options={[
+                            { label: "Instagram", value: "Instagram" },
+                            { label: "Linkedin", value: "Linkedin" },
+                            { label: "Youtube", value: "Youtube" },
+                          ]}
+                          labelName="Socail Media"
+                          placeholder="Select Social Media"
+                          id={`social-media-${index}`}
+                          ErrorMessage="Select any one social media"
+                          isError={isSocialMediaError}
+                          // onChange={handleSocialMediaOption}
+                          onChange={(type) =>
+                            handleSocialMediaOption(index, type)
+                          }
+                          onSelect={(option) => {
+                            console.log("Selected social media:", option.label);
+                          }}
+                        />
+                        <InputBox
+                          Title="Link"
+                          Placeholder="Enter social handle link"
+                          InputType="text"
+                          Inputname={`business-media-link`}
+                          ErrorMessage="link cannot be empty."
+                          onChange={(e) => handleMediaLinkOption(e, index)}
+                          isError={isMediaLinkError}
+                          // value={businessLink}
+                        />
+                      </div>
+                      {index > 0 && (
+                        <span
+                          className="bottom-10 text-xl close-mark text-red-400 cursor-pointer"
+                          onClick={() => handleRemoveSocialMedia(index)}
                         >
-                          <Dropdown
-                            options={[
-                              { label: "Instagram", value: "Instagram" },
-                              { label: "Linkedin", value: "Linkedin" },
-                              { label: "Youtube", value: "Youtube" },
-                            ]}
-                            labelName="Socail Media"
-                            placeholder="Select Social Media"
-                            id={`social-media-${index}`}
-                            ErrorMessage="Select any one social media"
-                            isError={isSocialMediaError}
-                            // onChange={handleSocialMediaOption}
-                            onChange={(type) =>
-                              handleSocialMediaOption(index, type)
-                            }
-                            onSelect={(option) => {
-                              console.log(
-                                "Selected social media:",
-                                option.label
-                              );
-                            }}
-                          />
-                          <InputBox
-                            Title="Link"
-                            Placeholder="Enter social handle link"
-                            InputType="text"
-                            Inputname={`business-media-link`}
-                            ErrorMessage="link cannot be empty."
-                            onChange={(link) =>
-                              handleMediaLinkOption(index, link)
-                            }
-                            isError={isMediaLinkError}
-                            className=""
-                          />
-                        </div>
-                        {index > 0 && (
-                          <span
-                            className="bottom-10 text-xl close-mark text-red-400 cursor-pointer"
-                            onClick={() => handleRemoveSocialMedia(index)}
-                          >
-                            x
-                          </span>
-                        )}
-                      </>
-                    ))}
-                  </div>
-                  <div>
-                    <button
-                      className="add-social-media hover:shadow-lg mt-8 text-center cursor-pointer"
-                      onClick={handleAddSocialMedia}
-                    >
-                      <img
-                        src="https://i.ibb.co/xhwrNWs/add.png"
-                        alt="add image"
-                        className="w-8 h-8 relative left-8 top-[6px]"
-                      ></img>
-                      <span className="text-center px-3 font-bold relative bottom-[20px]">
-                        Add Another Social Media
-                      </span>
-                    </button>
-                  </div>
-
+                          x
+                        </span>
+                      )}
+                    </>
+                  ))}
+                </div>
+                <div>
                   <button
-                    className="bg-primaryColor text-white text-lg font-bold px-6 py-2 rounded-md relative mt-24 curser-pointer"
-                    onClick={handleBack}
+                    className="add-social-media hover:shadow-lg mt-8 text-center cursor-pointer"
+                    onClick={handleAddSocialMedia}
                   >
-                    <span
-                      aria-hidden="true"
-                      className="hidden transition-transform transform sm:inline-block mr-3 group-hover:translate-x-1"
-                    >
-                      &larr;
-                    </span>
-                    Back{" "}
-                  </button>
-                  <button
-                    className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative left-[40%] mt-24 curser-pointer"
-                    onClick={handleValidationTwo}
-                  >
-                    Continue{" "}
-                    <span
-                      aria-hidden="true"
-                      className="hidden transition-transform transform sm:inline-block ml-2 group-hover:translate-x-1"
-                    >
-                      &rarr;
+                    <img
+                      src="https://i.ibb.co/xhwrNWs/add.png"
+                      alt="add image"
+                      className="w-8 h-8 relative left-8 top-[6px]"
+                    ></img>
+                    <span className="text-center px-3 font-bold relative bottom-[20px]">
+                      Add Another Social Media
                     </span>
                   </button>
                 </div>
-              )}
+
+                <button
+                  className="bg-primaryColor text-white text-lg font-bold px-6 py-2 rounded-md relative mt-24 curser-pointer"
+                  onClick={handleBack}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="hidden transition-transform transform sm:inline-block mr-3 group-hover:translate-x-1"
+                  >
+                    &larr;
+                  </span>
+                  Back{" "}
+                </button>
+                <button
+                  className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative left-[40%] mt-24 curser-pointer"
+                  onClick={handleValidationTwo}
+                >
+                  Continue{" "}
+                  <span
+                    aria-hidden="true"
+                    className="hidden transition-transform transform sm:inline-block ml-2 group-hover:translate-x-1"
+                  >
+                    &rarr;
+                  </span>
+                </button>
+              </div>
+              {/* )} */}
               {activeSection === 3 && (
                 <div className="media section w-full relative left-[70px]">
                   <p className="font-semibold text-2xl">Media</p>
@@ -1342,6 +1505,7 @@ export default function CreateProfile() {
                                 type="file"
                                 className="file-input pointer h-1/2"
                                 onChange={handleCoverPhotoChange}
+                                accept="image/jpeg, image/png"
                               />
                             </>
                           )}
@@ -1364,6 +1528,7 @@ export default function CreateProfile() {
                             type="file"
                             className="file-input"
                             onChange={handleCoverPhotoChange}
+                            accept="image/jpeg, image/png"
                           />
                           <FiUpload
                             size={38}
@@ -1400,6 +1565,7 @@ export default function CreateProfile() {
                                 type="file"
                                 className="file-input pointer h-[45%] relative bottom-40 w-[380px]"
                                 onChange={handleProfilePhotoChange}
+                                accept="image/jpeg, image/png"
                               />
                             </>
                           )}
@@ -1413,6 +1579,7 @@ export default function CreateProfile() {
                               size={38}
                               className="mt-6 mx-auto w-full text-defaultTheme pointer"
                               onClick={handleDeleteProfilePhoto}
+                              accept="image/jpeg, image/png"
                             />
                           )}
                         </div>
@@ -1480,7 +1647,7 @@ export default function CreateProfile() {
                           name="country"
                           id="country"
                           className="transform scale-125 cursor-pointer"
-                          checked={chooseState === "allIndia"}
+                          // checked={chooseState === "allIndia"}
                           onChange={() => handleStateChange("allIndia")}
                         />
                         <label
@@ -1496,8 +1663,9 @@ export default function CreateProfile() {
                           name="country"
                           id="choose-country"
                           className="transform scale-125 cursor-pointer"
-                          checked={chooseState === "chooseStates"}
+                          // checked={chooseState === "chooseStates"}
                           onChange={() => handleStateChange("chooseStates")}
+                          //   onClick={() => handleStateChange("chooseStates")} //if we click choose state that time also it will open
                         />
                         <label
                           htmlFor="choose-country"
@@ -1610,10 +1778,10 @@ export default function CreateProfile() {
                                           name={`state-${filteredCountry.name}`}
                                           id={`choose-state-${filteredCountry.locationId}`}
                                           className="transform scale-125 cursor-pointer"
-                                          checked={
-                                            selectedRegion ===
-                                            filteredCountry.locationId
-                                          }
+                                          // checked={
+                                          //   selectedRegion ===
+                                          //   filteredCountry.locationId
+                                          // }
                                           onChange={() => {
                                             handleRegionChange(
                                               filteredCountry.locationId
