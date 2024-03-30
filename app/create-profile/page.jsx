@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import UserHeader from "@/components/UserHeader";
 import InputBox from "@/components/CustomInput";
 import Dropdown from "@/components/Dropdown";
@@ -8,14 +9,16 @@ import config from "@/components/config";
 import { useRouter } from "next/navigation";
 import { FaCheck, FaAngleDown, FaPlus } from "react-icons/fa";
 import { FiUpload, FiTrash2 } from "react-icons/fi";
+import { EditIcon } from "../Assets/icons";
 // import "../Assets";
 export default function CreateProfile() {
   const router = useRouter();
   const sections = [
-    "Fill General Information",
-    "Fill Contact Information",
-    "Upload Media",
-    "Fill Business Information",
+    "Please Fill General Information",
+    "Please Fill Contact Information",
+    "Please Upload Media",
+    "Please Fill Business Information",
+    "Review",
   ];
   const [accessToken, setAccessToken] = useState({});
   const [activeSection, setActiveSection] = useState(null);
@@ -235,6 +238,7 @@ export default function CreateProfile() {
   const [businessProfileId, setBusinessProfileId] = useState(null);
 
   // let businessProfileId = null;
+  const [profileId, setProfileId] = useState(null);
 
   const getAllPartner = async () => {
     try {
@@ -266,6 +270,7 @@ export default function CreateProfile() {
         const newBusinessProfileId = businessProfileList[0].id; // Store the ID for future use
         setBusinessProfileId(newBusinessProfileId); // Update state with the fetched ID
         console.log("businessProfileId", newBusinessProfileId);
+        setProfileId(newBusinessProfileId);
         return newBusinessProfileId;
       }
     } catch (error) {
@@ -490,6 +495,7 @@ export default function CreateProfile() {
   // };
 
   const [businessName, setBusinessName] = useState(null);
+  const [selectedBusinessLine, setSelectedBusinessLine] = useState(null);
   //firstSection
   const handleChange = (e) => {
     // Clear the error when the user starts typing
@@ -510,12 +516,13 @@ export default function CreateProfile() {
       (option) => option.label === selectedLabel
     );
     setSelectedOption(selectedLabel);
-
+    setSelectedBusinessLine(selectedLabel.label);
     // If needed, update any other state based on the selected option
     if (selectedOption) {
       setSelectedOptions({
         options: selectedOption.label,
       });
+      setSelectedBusinessLine(selectedOption);
     }
   };
 
@@ -558,30 +565,36 @@ export default function CreateProfile() {
     }
   };
   const [selectedPlaceOption, setSelectedPlaceOption] = useState("");
+  const [editSelectedPlaceOption, setEditSelectedPlaceOption] = useState(null);
   const handleZipChange = async (option) => {
     console.log("place option clicked:", option);
     // setCityDropdownDisabled(option);
-    setSelectedPlaceOption(option);
+    setSelectedPlaceOption(option.value);
+    setEditSelectedPlaceOption(option);
   };
 
   const [places, setPlaces] = useState([]);
   const [selectedPlace, setSelectedPlace] = useState("");
+  const [editselectedPlace, setEditSelectedPlace] = useState(null);
   const [isPlaceDropdownDisabled, setPlaceDropdownDisabled] = useState(true);
 
   const handleOptionClickCity = async (option) => {
     console.log("City option clicked:", option);
-    setPlaceDropdownDisabled(option);
-    setSelectedPlace(option);
+    setPlaceDropdownDisabled(!option.value);
+    setSelectedPlace(option.value);
+    setEditSelectedPlace(option);
     // localStorage.setItem("selectedState", JSON.stringify(option));
   };
   const [cities, setCities] = useState([]);
   const [selectedState, setSelectedState] = useState("");
+  const [editSelectedState, setEditSelectedState] = useState(null);
   const [isCityDropdownDisabled, setCityDropdownDisabled] = useState(true);
 
   const handleOptionClickState = async (option) => {
     console.log("State option clicked:", option);
-    setCityDropdownDisabled(option);
-    setSelectedState(option);
+    setCityDropdownDisabled(!option.value);
+    setSelectedState(option.value);
+    setEditSelectedState(option);
     // Save selected state to local storage
   };
 
@@ -1009,6 +1022,7 @@ export default function CreateProfile() {
     console.log(value);
     setIsBusinessBoxVisible(true);
     // Toggle the selection
+    // handleValidationFour(value);
     setSelectBusinessKindOptions((prevSelectedCountries) => {
       if (prevSelectedCountries.includes(value)) {
         // If already selected, remove it
@@ -1018,6 +1032,7 @@ export default function CreateProfile() {
         return [...prevSelectedCountries, value];
       }
     });
+    setBusinessKindId((prevBkId) => (prevBkId === value ? "" : prevBkId));
   };
   // const handleBusinessKindChange = async (selectedState) => {
   //   setCheckKindOptions((prevCheckKindOptions) => {
@@ -1133,11 +1148,8 @@ export default function CreateProfile() {
       console.error("Error fetching business kind details:", error.message);
     }
   };
-
   const BusinessKindOptionsChange = (value) => {
     console.log("Kind value", value);
-    // setIsThirdBoxVisible(true);
-
     // Toggle the selection
     setSelectKindOptionsChange((prevSelectedCountries) => {
       if (prevSelectedCountries.includes(value)) {
@@ -1148,15 +1160,155 @@ export default function CreateProfile() {
         return [...prevSelectedCountries, value];
       }
     });
+    // Update businessBcId immediately after updating selectKindOptionsChange
+    setBusinessBcId((prevBcId) => (prevBcId === value ? "" : prevBcId));
   };
 
-  const handleValidationFour = () => {
-    const nextSection = activeSection + 1;
-    setActiveSection(nextSection);
-    // Save the active section to local storage
-    // localStorage.setItem("activeSection", nextSection);
-    window.scrollTo(350, 350);
+  // const handleValidationFour = async () => {
+  //   const profileId = await getAllPartner();
+  //   const response = await fetch(
+  //     `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile/${profileId}`,
+  //     {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${accessToken}`,
+  //       },
+  //       body: JSON.stringify({
+  //         id: "ids",
+  //         locationId: "locationId",
+  //         name: "name",
+  //       }),
+  //     }
+  //   );
+
+  //   if (response.ok) {
+  //     // Save the active section to local storage
+  //     // localStorage.setItem("activeSection", nextSection);
+  //     window.scrollTo(350, 350);
+
+  //     const nextSection = activeSection + 1;
+  //     setActiveSection(nextSection);
+  //   }
+  // };
+
+  const [check, setCheck] = useState();
+  const [businessKindId, setBusinessKindId] = useState();
+  const [businessBcId, setBusinessBcId] = useState();
+
+  const handleApi = async (value) => {
+    setCheck();
   };
+  // const bussinessKindObjects = { bkId: businessKindId, bcId: businessBcId };
+
+  // selectBusinessKindOptions.forEach((bkId) => {
+  //   businessMappings.push({ bkId });
+  // });
+  // selectKindOptionsChange.forEach((bcId) => {
+  //   businessMappings.push({ bcId });
+  // });
+  const handleValidationFour = async () => {
+    const profileId = await getAllPartner();
+
+    // Create an array to hold the selected service areas
+    const serviceAreas = [];
+    const businessMappings = [];
+
+    // Iterate over selected districts to construct service areas objects
+    selectPlaceOptions.forEach((option) => {
+      serviceAreas.push({
+        id: option.id,
+        locationId: option.locationId,
+        name: option.name,
+      });
+    });
+
+    // Iterate over each selected bkId from selectBusinessKindOptions
+    selectBusinessKindOptions.forEach((bkId) => {
+      // Check if the current bkId has an associated bcId in selectKindOptionsChange
+      const associatedBcIds = selectKindOptionsChange.filter(
+        (bcId) => bcId.bkId === bkId
+      );
+
+      // If there are associated bcIds
+      if (associatedBcIds.length > 0) {
+        // Map each bcId to its corresponding bkId
+        associatedBcIds.forEach((bcId) => {
+          businessMappings.push({ bkId, bcId });
+        });
+      } else {
+        // If no associated bcIds are selected, include the bkId with an empty bcId
+        businessMappings.push({ bkId, bcId: "" });
+      }
+    });
+
+    const response = await fetch(
+      `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile/${profileId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          serviceAreas: serviceAreas,
+          businessMappings: businessMappings,
+        }),
+      }
+    );
+
+    if (response.ok) {
+      window.scrollTo(350, 350);
+      const nextSection = activeSection + 1;
+      setActiveSection(nextSection);
+    }
+  };
+
+  //Fifth section -- review
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSecondEditing, setSecondIsEditing] = useState(false);
+  // const [editedBusinessName, setEditedBusinessName] = useState(businessName);
+  // const [editedBusinessEmail, setEditedBusinessEmail] = useState(businessEmail);
+
+  // useEffect(() => {
+  //   setEditedBusinessName(businessName);
+  //   setEditedBusinessEmail(businessEmail);
+  // }, [businessName, businessEmail]);
+
+  const toggleGeneralEditMode = () => {
+    setIsEditing(!isEditing);
+  };
+  const toggleContactEditMode = () => {
+    setSecondIsEditing(!isSecondEditing);
+  };
+
+  // const handleChangeName = (e) => {
+  //   setEditedBusinessName(e.target.value);
+  // };
+  // const handleChangeEmail = (e) => {
+  //   setEditedBusinessEmail(e.target.value);
+  // };
+
+  const handleGeneralSave = () => {
+    setIsEditing(false);
+    // setBusinessName(editedBusinessName);
+  };
+
+  const handleContactSave = () => {
+    setSecondIsEditing(false);
+    // setBusinessEmail(editedBusinessEmail);
+  };
+
+  //Sixth section
+  const [accountIds, setAccountIds] = useState(null);
+
+  useEffect(() => {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const accountIdParam = urlParams.get("accountId");
+    setAccountIds(accountIdParam);
+  }, []);
+
   return (
     <>
       <div className="flex h-full">
@@ -1190,7 +1342,7 @@ export default function CreateProfile() {
                   </div>
                   {index < sections.length - 1 && (
                     <div
-                      className="line w-[260px] h-[5px]"
+                      className="line min-w-[260px] h-[5px]"
                       style={{
                         backgroundColor:
                           index < activeSection - 1 ? "#DE3163" : "#D1D5DB",
@@ -1199,15 +1351,15 @@ export default function CreateProfile() {
                     ></div>
                   )}
                   <p
-                    className={`font-bold text-sm absolute top-10 w-[190px] text-center ${
+                    className={`font-bold text-sm absolute top-10 ml-10 w-[190px] text-center ${
                       index < activeSection
                         ? "text-primaryColor"
                         : "text-gray-400"
                     }`}
-                    style={{ left: `${13.5 + 20 * index}%` }}
+                    style={{ left: `${20.3 * index}%` }}
                     onClick={() => handleSectionClick(index)}
                   >
-                    PLEASE {section.toUpperCase()}
+                    {section.toUpperCase()}
                   </p>
                 </div>
               ))}
@@ -1243,7 +1395,7 @@ export default function CreateProfile() {
                     ErrorMessage="Select any one Business Line"
                     isError={isDropdownError}
                     // onChange={handleOptionClick}
-                    defaultOption={selectedOption}
+                    defaultOption={selectedBusinessLine}
                     onSelect={(option) => {
                       console.log("Option in select:", option.label);
                       handleOptionClick(option.label);
@@ -1342,11 +1494,12 @@ export default function CreateProfile() {
                     placeholder="Select State"
                     id="state"
                     ErrorMessage="Select any one State"
+                    defaultOption={editSelectedState}
                     // isError={isDropdownErrorState}
                     // onChange={handleOptionClickState}
                     onSelect={(option) => {
                       console.log("Selected State:", option.value);
-                      handleOptionClickState(option.value);
+                      handleOptionClickState(option);
                     }}
                   />
                 </div>
@@ -1359,16 +1512,17 @@ export default function CreateProfile() {
                     labelName="City"
                     placeholder={
                       isCityDropdownDisabled
-                        ? "Select City"
-                        : "First select a state"
+                        ? "First select a state"
+                        : "Select City"
                     }
                     id="city"
                     ErrorMessage="Select any one City"
+                    defaultOption={editselectedPlace}
                     // isError={isDropdownErrorCity}
-                    onChange={handleOptionClickCity}
+                    // onChange={handleOptionClickCity}
                     onSelect={(option) => {
                       console.log("Selected city:", option.value);
-                      handleOptionClickCity(option.value);
+                      handleOptionClickCity(option);
                     }}
                   />
                   <Dropdown
@@ -1379,16 +1533,17 @@ export default function CreateProfile() {
                     labelName="Zip Code"
                     placeholder={
                       isPlaceDropdownDisabled
-                        ? "Select Zip Code"
-                        : "First select a state and city"
+                        ? "First select a state and city"
+                        : "Select Zip Code"
                     }
                     id={`zip-code`}
+                    defaultOption={editSelectedPlaceOption}
                     ErrorMessage="Select any one Pincode"
                     // isError={isZipError}
-                    onChange={handleZipChange}
+                    // onChange={handleZipChange}
                     onSelect={(option) => {
                       console.log("Selected places:", option.value);
-                      handleZipChange(option.value);
+                      handleZipChange(option);
                     }}
                   />
                 </div>
@@ -1608,30 +1763,32 @@ export default function CreateProfile() {
                       )}
                     </div>
                   </div>
-                  <button
-                    className="bg-primaryColor text-white text-lg font-bold px-6 py-2 rounded-md relative mt-24 curser-pointer"
-                    onClick={handleBack}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="hidden transition-transform transform sm:inline-block mr-3 group-hover:translate-x-1"
+                  <div className="flex justify-between w-[65%]">
+                    <button
+                      className="bg-primaryColor text-white text-lg font-bold px-6 py-2 rounded-md relative mt-24 curser-pointer"
+                      onClick={handleBack}
                     >
-                      &larr;
-                    </span>
-                    Back{" "}
-                  </button>
-                  <button
-                    className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative left-[46%] mt-24"
-                    onClick={handleValidationThree}
-                  >
-                    Continue{" "}
-                    <span
-                      aria-hidden="true"
-                      className="hidden transition-transform transform sm:inline-block ml-2 group-hover:translate-x-1"
+                      <span
+                        aria-hidden="true"
+                        className="hidden transition-transform transform sm:inline-block mr-3 group-hover:translate-x-1"
+                      >
+                        &larr;
+                      </span>
+                      Back{" "}
+                    </button>
+                    <button
+                      className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md mt-24"
+                      onClick={handleValidationThree}
                     >
-                      &rarr;
-                    </span>
-                  </button>
+                      Continue{" "}
+                      <span
+                        aria-hidden="true"
+                        className="hidden transition-transform transform sm:inline-block ml-2 group-hover:translate-x-1"
+                      >
+                        &rarr;
+                      </span>
+                    </button>
+                  </div>
                 </div>
               )}
               {activeSection === 4 && (
@@ -1899,11 +2056,11 @@ export default function CreateProfile() {
                                             //   selectedRegion ===
                                             //   filteredDistrict.value
                                             // }
-                                            onChange={() =>
+                                            onChange={() => {
                                               handlePlaceOption(
                                                 filteredDistrict.name
-                                              )
-                                            }
+                                              );
+                                            }}
                                           />
 
                                           <label
@@ -1987,15 +2144,13 @@ export default function CreateProfile() {
                                                     name={`country-option-${option.name}`}
                                                     className="transform scale-125 cursor-pointer custom-checkbox relative bottom-2"
                                                     checked={selectPlaceOptions.includes(
-                                                      option.name
+                                                      option
                                                     )}
                                                     onChange={() => {
-                                                      handlePlaceChange(
-                                                        option.name
-                                                      );
+                                                      handlePlaceChange(option);
                                                       console.log(
                                                         "selected district",
-                                                        option.locationId
+                                                        option
                                                       );
                                                     }}
                                                   />
@@ -2049,6 +2204,9 @@ export default function CreateProfile() {
                                               option.bcId
                                             );
                                           }}
+                                          checked={selectBusinessKindOptions.includes(
+                                            option.bcId
+                                          )}
                                         />
                                         <label className="ml-3 font-light">
                                           {option.name}
@@ -2104,6 +2262,11 @@ export default function CreateProfile() {
                                               "selected bcId",
                                               filteredCountry.bcId
                                             );
+                                            // setBusinessBcId((prevBcId) =>
+                                            //   prevBcId === filteredCountry.bcId
+                                            //     ? ""
+                                            //     : filteredCountry.bcId
+                                            // );
                                             console.log(
                                               "selected selectKindOptions",
                                               selectKindOptions
@@ -2202,7 +2365,7 @@ export default function CreateProfile() {
                     className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative left-[46%] mt-24"
                     onClick={handleValidationFour}
                   >
-                    Finish{" "}
+                    Review{" "}
                     <span
                       aria-hidden="true"
                       className="transition-transform transform sm:inline-block ml-2 group-hover:translate-x-1 relative top-[2px]"
@@ -2213,6 +2376,361 @@ export default function CreateProfile() {
                 </div>
               )}
               {activeSection === 5 && (
+                <div
+                  className={`section w-full ml-20 ${
+                    activeSection === 5 ? "block" : "hidden"
+                  }`}
+                >
+                  {/* General section */}
+                  <div className="w-[70%] mb-10">
+                    <div className="flex justify-between items-center">
+                      <p className="font-semibold text-2xl">
+                        General Information
+                      </p>
+                      {!isEditing && (
+                        <button
+                          className="user-btn flex items-center group cursor-pointer"
+                          onClick={toggleGeneralEditMode}
+                        >
+                          <span className="text-lg font-medium mr-2 ">
+                            {isEditing ? "" : "Edit Information"}
+                          </span>
+                          <EditIcon
+                            PathClassName="fill-[red] group-hover:fill-[#fff] transition-all delay-75"
+                            SvgClassName="w-6 h-6"
+                          />
+                        </button>
+                      )}
+                    </div>
+                    <div className="mt-5 flex justify-between">
+                      {isEditing ? (
+                        <div className="flex flex-col w-full">
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Business Name</p>
+                            {/* <input
+                              type="text"
+                              value={editedBusinessName}
+                              onChange={handleChangeName}
+                              className="text-[#767676] font-light mb-3 w-full border-b text-lg bg-[#F5E7EA] border-gray-400 focus:outline-none"
+                            /> */}
+                            <InputBox
+                              Placeholder="Enter Business Name"
+                              InputType="text"
+                              Inputname="business-name"
+                              ErrorMessage="Business Name cannot be empty."
+                              onChange={handleChange}
+                              isError={isError}
+                              value={businessName}
+                            />
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300">
+                            <p className="text-lg">Business Line</p>
+                            <Dropdown
+                              options={businessLineOptions}
+                              placeholder="Select Business Line"
+                              id="business-line"
+                              ErrorMessage="Select any one Business Line"
+                              isError={isDropdownError}
+                              // onChange={handleOptionClick}
+                              defaultOption={selectedBusinessLine || null}
+                              onSelect={(option) => {
+                                console.log("Option in select:", option.label);
+                                handleOptionClick(option.label);
+                              }}
+                            />
+                          </div>
+                          <div className="w-full justify-end flex">
+                            <button
+                              className="user-btn w-[20%] mt-4 "
+                              onClick={handleGeneralSave}
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full">
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Business Name</p>
+                            <p className="text-lg text-[#767676] font-light">
+                              {businessName
+                                ? businessName
+                                : "Add Business Name"}
+                            </p>
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300">
+                            <p className="text-lg">Business Line</p>
+                            <p className="text-lg text-[#767676] font-light">
+                              {selectedBusinessLine
+                                ? selectedBusinessLine.label
+                                : "Select Business Line"}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Contact section */}
+                  <div className="w-[70%]">
+                    <div className="flex justify-between items-center">
+                      <p className="font-semibold text-2xl">
+                        Contact Information
+                      </p>
+                      {!isSecondEditing && (
+                        <button
+                          className="user-btn flex items-center group cursor-pointer"
+                          onClick={toggleContactEditMode}
+                        >
+                          <span className="text-lg font-medium mr-2 ">
+                            {isSecondEditing ? "" : "Edit Information"}
+                          </span>
+                          <EditIcon
+                            PathClassName="fill-[red] group-hover:fill-[#fff] transition-all delay-75"
+                            SvgClassName="w-6 h-6"
+                          />
+                        </button>
+                      )}
+                    </div>
+                    <div className="mt-5 flex justify-between">
+                      {isSecondEditing ? (
+                        <div className="flex flex-col w-full">
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Business Email</p>
+                            <InputBox
+                              Placeholder="Enter Business Email"
+                              InputType="email"
+                              Inputname="business-email"
+                              ErrorMessage="Business Email is not valid"
+                              onChange={handleEmailChange}
+                              value={businessEmail}
+                              // isError={isEmailError}
+                            />
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Business Phone</p>
+                            <InputBox
+                              Placeholder="Enter Business Phone"
+                              InputType="number"
+                              Inputname="business-phone"
+                              ErrorMessage="Business Phone cannot be empty."
+                              onChange={handlePhoneChange}
+                              // isError={isPhoneError}
+                              className="number-input"
+                              value={businessPhone}
+                            />
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Business Whatsapp</p>
+                            <InputBox
+                              Placeholder="Enter Business Whatsapp"
+                              InputType="number"
+                              Inputname="business-whatsapp"
+                              ErrorMessage="Business whatsapp cannot be empty."
+                              onChange={handleWhatsappChange}
+                              // isError={isWhatsappError}
+                              className="number-input"
+                              value={businessWhatsapp}
+                            />
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Business Address</p>
+                            <InputBox
+                              Placeholder="Enter Business Address"
+                              InputType="text"
+                              Inputname="business-address"
+                              ErrorMessage="Business address cannot be empty."
+                              onChange={handleAddressChange}
+                              // isError={isAddressError}
+                              value={businessAddress}
+                            />
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Country</p>
+                            <Dropdown
+                              options={[{ label: "India", value: "India" }]}
+                              placeholder="India"
+                              id="country"
+                              ErrorMessage="Select any one Country"
+                              defaultOption={{ label: "India", value: "India" }}
+                              // isError={isDropdownErrorCountry}
+                              // onChange={handleOptionClick}
+                              onSelect={(option) => {
+                                console.log("Option in country:", option.label);
+                                handleOptionClickCountry(option.label);
+                              }}
+                            />
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">State</p>
+                            <Dropdown
+                              options={state.map((states) => ({
+                                label: states.name,
+                                value: states.locationId,
+                              }))}
+                              placeholder="Select State"
+                              id="state"
+                              ErrorMessage="Select any one State"
+                              defaultOption={editSelectedState}
+                              // isError={isDropdownErrorState}
+                              // onChange={handleOptionClickState}
+                              onSelect={(option) => {
+                                console.log("Selected State:", option.value);
+                                handleOptionClickState(option);
+                              }}
+                            />
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">City</p>
+                            <Dropdown
+                              options={cities.map((city) => ({
+                                label: city.name,
+                                value: city.locationId,
+                              }))}
+                              placeholder={
+                                isCityDropdownDisabled
+                                  ? "First select a state"
+                                  : "Select City"
+                              }
+                              id="city"
+                              ErrorMessage="Select any one City"
+                              // isError={isDropdownErrorCity}
+                              defaultOption={editselectedPlace}
+                              // onChange={handleOptionClickCity}
+                              onSelect={(option) => {
+                                console.log("Selected city:", option.value);
+                                handleOptionClickCity(option);
+                              }}
+                            />
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Zip Code</p>
+                            <Dropdown
+                              options={places.map((city) => ({
+                                label: city.name + " - " + city.locationId,
+                                value: city.locationId,
+                              }))}
+                              placeholder={
+                                isPlaceDropdownDisabled
+                                  ? "First select a state and city"
+                                  : "Select Zip Code"
+                              }
+                              id={`zip-code`}
+                              defaultOption={editSelectedPlaceOption}
+                              ErrorMessage="Select any one Pincode"
+                              // isError={isZipError}
+                              // onChange={handleZipChange}
+                              onSelect={(option) => {
+                                console.log("Selected places:", option.value);
+                                handleZipChange(option);
+                              }}
+                            />
+                          </div>
+                          <div className="w-full justify-end flex">
+                            <button
+                              className="user-btn w-[20%] mt-4 "
+                              onClick={handleContactSave}
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full">
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Business Email</p>
+                            <p className="text-lg text-[#767676] font-light">
+                              {businessEmail
+                                ? businessEmail
+                                : "Add Business Email"}
+                            </p>
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Business Phone</p>
+                            <p className="text-lg text-[#767676] font-light">
+                              {businessPhone
+                                ? businessPhone
+                                : "Add Business PhoneNumber"}
+                            </p>
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Business Whatsapp</p>
+                            <p className="text-lg text-[#767676] font-light">
+                              {businessWhatsapp
+                                ? businessWhatsapp
+                                : "Add Business Whatsapp"}
+                            </p>
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Business Address</p>
+                            <p className="text-lg text-[#767676] font-light">
+                              {businessAddress
+                                ? businessAddress
+                                : "Add Business Address"}
+                            </p>
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Country</p>
+                            <p className="text-lg text-[#767676] font-light">
+                              India
+                            </p>
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">State</p>
+                            <p className="text-lg text-[#767676] font-light">
+                              {editSelectedState
+                                ? editSelectedState.label
+                                : "Select State"}
+                            </p>
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">City</p>
+                            <p className="text-lg text-[#767676] font-light">
+                              {editselectedPlace
+                                ? editselectedPlace.label
+                                : "Select City"}
+                            </p>
+                          </div>
+                          <div className="w-full p-5 bg-[#F5E7EA] rounded-lg border border-gray-300 mb-4">
+                            <p className="text-lg">Zip Code</p>
+                            <p className="text-lg text-[#767676] font-light">
+                              {editSelectedPlaceOption
+                                ? editSelectedPlaceOption.label
+                                : "Select Zip Code"}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex justify-between w-[70%]">
+                    <button
+                      className="bg-primaryColor text-white text-lg font-bold px-6 py-2 rounded-md relative mt-24 curser-pointer"
+                      onClick={handleBack}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="hidden transition-transform transform sm:inline-block mr-3 group-hover:translate-x-1"
+                      >
+                        &larr;
+                      </span>
+                      Back{" "}
+                    </button>
+                    <button
+                      className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative  mt-24"
+                      onClick={handleValidationThree}
+                    >
+                      Continue{" "}
+                      <span
+                        aria-hidden="true"
+                        className="hidden transition-transform transform sm:inline-block ml-2 group-hover:translate-x-1"
+                      >
+                        &rarr;
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              )}
+              {activeSection === 6 && (
                 <div className="finish-section w-full relative flex flex-col justify-center left-[370px]">
                   <img
                     src="./images/success.png"
@@ -2222,9 +2740,15 @@ export default function CreateProfile() {
                   <p className="text-2xl w-[380px] text-center font-bold relative right-[30px]">
                     Your business profile has been successfully created!
                   </p>
-                  <a
+                  <Link
+                    href={{
+                      pathname: "/user-profile",
+                      query: {
+                        partnerId: accountIds,
+                        profileId: profileId,
+                      },
+                    }}
                     className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative w-[200px] mt-14 ml-14"
-                    href="./user-profile"
                   >
                     Go to Profile{" "}
                     <span
@@ -2233,7 +2757,7 @@ export default function CreateProfile() {
                     >
                       &rarr;
                     </span>
-                  </a>
+                  </Link>
                   <div className="w-[400px]">
                     <button
                       className="bg-primaryColor text-white text-lg font-bold px-[50px] py-2 rounded-md relative left-[60px] mt-10 curser-pointer"

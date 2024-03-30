@@ -542,3 +542,39 @@ export const InfoIconfilled = ({
     </svg>
   );
 };
+
+export const SwitchIcon = ({
+  SvgClassName = "",
+  PathClassName = "",
+  onClick,
+}) => {
+  return (
+    <svg
+      width="24"
+      height="25"
+      viewBox="0 0 24 25"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={SvgClassName}
+    >
+      <mask
+        id="mask0_1050_232"
+        style={{ maskType: "alpha" }}
+        maskUnits="userSpaceOnUse"
+        x="0"
+        y="0"
+        width="24"
+        height="25"
+      >
+        <rect y="0.5" width="24" height="24" fill="#D9D9D9" />
+      </mask>
+      <g mask="url(#mask0_1050_232)">
+        <path
+          d="M7 22.5L3 18.5L7 14.5L8.4 15.95L6.85 17.5H17V13.5H19V19.5H6.85L8.4 21.05L7 22.5ZM5 11.5V5.5H17.15L15.6 3.95L17 2.5L21 6.5L17 10.5L15.6 9.05L17.15 7.5H7V11.5H5Z"
+          fill="#D5D5D5"    
+          className={PathClassName}
+        />
+      </g>
+    </svg>
+  );
+};

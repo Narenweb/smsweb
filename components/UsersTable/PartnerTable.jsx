@@ -124,17 +124,14 @@ export default function PartnerTable() {
     }
   };
 
-  const handleButtonClick = (accountId) => {
-    // Construct the URL dynamically
+  // Inside your component function
+  // const history = useHistory();
 
-    // const apiUrl = `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile/93638364-b06c-4a2d-885a-5e35cd04cc25`;
-    const apiUrl = `${config.host}/tenant/admin/v2/partner/business/profile/all`;
-    const bodyData = JSON.stringify({
-      partnerId: accountId,
-    });
-    // Call the API
+  const handleButtonClick = (accountId) => {
+    const apiUrl = `${config.host}/tenant/admin/user/v2/partner/${accountId}/business/profile`;
+
     fetch(apiUrl, {
-      method: "POST",
+      method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
@@ -152,7 +149,9 @@ export default function PartnerTable() {
       })
       .then((data) => {
         // Handle data
-        console.log(data);
+        console.log("Data received:", data);
+        // Assuming you want to navigate to the '/my-profile' route with query parameter
+        // window.location.href = `./my-profile`;
       })
       .catch((error) => {
         // Handle error
@@ -821,9 +820,9 @@ export default function PartnerTable() {
                               <div className="py-[21.8px] mb-3 bg-white rounded-r-[10px] pr-1">
                                 <button
                                   className="px-3 rounded text-white hover:bg-gray-100 "
-                                  onClick={() =>
-                                    handleButtonClick(row.accountId)
-                                  }
+                                  // onClick={() =>
+                                  //   handleButtonClick(row.accountId)
+                                  // }
                                 >
                                   <RightIcon />
                                 </button>

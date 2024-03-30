@@ -26,6 +26,7 @@ export default function Dropdown({
 
   useEffect(() => {
     // Call the onSelect callback when the selected value changes
+    console.log("defaultOption",defaultOption)
     console.log("value in dropdown component", selectedOption);
   }, [selectedOption]);
 
@@ -46,7 +47,7 @@ export default function Dropdown({
                 : "ring-[#E1E1E1]"
             } hover:bg-gray-50 pl-5 w-[370px] mt-3`}
           >
-            {selectedOption?.label || placeholder}
+            {defaultOption?.label  || placeholder || selectedOption?.label }
             <ChevronDownIcon
               className="-mr-1 h-5 w-5 text-gray-400"
               aria-hidden="true"

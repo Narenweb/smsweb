@@ -1,6 +1,7 @@
 "use client";
 import UserHeader from "@/components/UserHeader";
 import Link from "next/link";
+import config from "@/components/config";
 import { MagnifyingGlassIcon, StarIcon } from "@heroicons/react/20/solid";
 import { Bars3BottomLeftIcon } from "@heroicons/react/24/outline";
 import React, { useState, useEffect } from "react";
@@ -16,6 +17,7 @@ import {
   InfoIcon,
   ContactIcon,
   BusinessIcon,
+  SwitchIcon,
 } from "../Assets/icons";
 import CustomizedSideNav from "@/components/CustomizedSideNav";
 import Image from "next/image";
@@ -24,9 +26,10 @@ import { ArrowLongLeftIcon } from "@heroicons/react/20/solid";
 // import "../Assets";
 export default function UserPortal() {
   const [activeSection, setActiveSection] = useState(
-    (typeof window !== "undefined" &&
-      sessionStorage.getItem("activeSection")) ||
-      "Product"
+    "Product"
+    // (typeof window !== "undefined" &&
+    //   sessionStorage.getItem("activeSection")) ||
+    //   "Product"
   );
   // useEffect(() => {
   //   sessionStorage.setItem("activeSection", activeSection);
@@ -251,6 +254,78 @@ export default function UserPortal() {
       "NA";
     setStoredCountry(countryFromLocalStorage);
   }, []);
+
+  //Last section switch profile
+  const [accountIds, setAccountIds] = useState(null);
+  const [profileIds, setProfileIds] = useState(null);
+  const [accessToken, setAccessToken] = useState({});
+
+  const checkAuthentication = () => {
+    const isAuthenticated = Boolean(localStorage.getItem("accessToken"));
+    return isAuthenticated;
+  };
+
+  useEffect(() => {
+    // Check if running on the client side
+    const storedAccessToken =
+      typeof window !== "undefined" && localStorage.getItem("accessToken");
+    console.log("accesstoken", storedAccessToken);
+    if (storedAccessToken) {
+      setAccessToken(storedAccessToken);
+    }
+    const isAuthenticated = checkAuthentication();
+    if (!isAuthenticated) {
+      router.push("/admin/login");
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const accountIdParam = urlParams.get("partnerId");
+    const profileIdParam = urlParams.get("profileId");
+    setAccountIds(accountIdParam);
+    setProfileIds(profileIdParam);
+  }, []);
+
+  useEffect(() => {
+    console.log("accountIds:", accountIds);
+    console.log("profileIds:", profileIds);
+    if (accountIds && profileIds) {
+      goToProductProfile();
+    }
+    const isAuthenticated = checkAuthentication();
+    if (!isAuthenticated) {
+      router.push("/admin/login");
+    }
+  }, [accountIds, profileIds, accessToken]);
+
+  const goToProductProfile = async () => {
+    try {
+      const response = await fetch(
+        `${config.host}/tenant/admin/user/v2/partner/${accountIds}/business/profile/${profileIds}/product`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setBusinessProfiles(data.serviceResponse.businessProfileList || []);
+        return data;
+      } else {
+        console.error("Failed to fetch data:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error.message);
+    }
+  };
+
+  //api.urbanbarrow.com/tenant/admin/user/v2/partner/24929081-5916-4a49-b169-11d5b3206c5b/business/profile/646601a4-81ec-40c2-a89b-b49a4885de63/product
+
   return (
     <>
       <div className="flex h-full bg-userTheme">
@@ -278,7 +353,7 @@ export default function UserPortal() {
               customeClass="top-[-230px] h-full"
               parentClass="max-h-[800px]"
             />
-            <div className="flex flex-col text-[#626262] rounded-xl bg-white w-[290px] max-h-[320px] h-auto lg:max-h-[297px] md:max-h-[340px] mt-28 ml-5">
+            <div className="flex flex-col text-[#626262] rounded-xl bg-white w-[290px] h-[370px] max-h-auto mt-28 ml-5">
               <div
                 className={`profile-sec flex items-center py-6 pl-4 border-b cursor-pointer hover:bg-lightViolet hover:text-theme transition-all ease-in delay-75 rounded-t-lg  ${
                   activeSection === "Product" ? "bg-lightViolet text-theme" : ""
@@ -307,6 +382,7 @@ export default function UserPortal() {
                 />
                 <p className="ml-3">About Me</p>
               </div>
+
               <div
                 className={`profile-sec flex items-center py-6 pl-4 border-b cursor-pointer hover:bg-lightViolet hover:text-theme transition-all ease-in delay-75 ${
                   activeSection === "Contact Information"
@@ -339,6 +415,25 @@ export default function UserPortal() {
                 />
                 <p className="ml-3">Business Information</p>
               </div>
+              <Link
+                href={{
+                  pathname: "./users-page/my-profile",
+                  query: { accountId: accountIds },
+                }}
+                className={`profile-sec flex items-center py-6 pl-4 border-b cursor-pointer hover:bg-lightViolet hover:text-theme transition-all ease-in delay-75 rounded-b-lg ${
+                  activeSection === "Switch Profile"
+                    ? "bg-lightViolet text-theme"
+                    : ""
+                }`}
+                onClick={() => handleSectionClick("Switch Profile")}
+              >
+                <SwitchIcon
+                  PathClassName={
+                    activeSection === "Switch Profile" ? "active-icon" : ""
+                  }
+                />
+                <p className="ml-3">Switch Profile</p>
+              </Link>
             </div>
             <div className="content-sections mt-10 ml-6 w-full">
               {activeSection === "Product" && (

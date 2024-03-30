@@ -14,9 +14,10 @@ import ReactCrop from "react-image-crop";
 export default function AddProduct() {
   const router = useRouter();
   const sections = [
-    "Fill General Information",
-    "Upload Media",
-    "Fill Business Information",
+    "Please Fill General Information",
+    "Please Upload Media",
+    "Please Fill Business Information",
+    "Review",
   ];
   const [accessToken, setAccessToken] = useState({});
   const [activeSection, setActiveSection] = useState(null);
@@ -1039,15 +1040,15 @@ export default function AddProduct() {
                     ></div>
                   )}
                   <p
-                    className={`font-bold text-sm absolute top-10 w-[190px] text-center ml-[140px] ${
+                    className={`font-bold text-sm absolute top-10 w-[190px] text-center ml-[180px] ${
                       index < activeSection
                         ? "text-primaryColor"
                         : "text-gray-400"
                     }`}
-                    style={{ left: `${13.5 + 20 * index}%` }}
+                    style={{ left: `${20.3 * index}%` }}
                     onClick={() => handleSectionClick(index)}
                   >
-                    PLEASE {section.toUpperCase()}
+                    {section.toUpperCase()}
                   </p>
                 </div>
               ))}
@@ -1072,7 +1073,10 @@ export default function AddProduct() {
                     onChange={handleChange}
                     isError={isError}
                     value={productName}
+                    isExtraSize
                   />
+                </div>
+                <div className="mt-10 flex justify-between w-[60%]">
                   <InputBox
                     Title="Description"
                     Placeholder="Enter Product Description"
@@ -1082,6 +1086,7 @@ export default function AddProduct() {
                     onChange={handleDescriptionChange}
                     //   isError={isError}
                     value={productDescription}
+                    isDesc
                   />
                 </div>
                 <div className="mt-10 flex justify-between w-[60%]">
@@ -1133,7 +1138,8 @@ export default function AddProduct() {
                     }}
                   />
                 </div>
-                <div className="mt-10 flex justify-between w-[60%]">
+                {/* Second slide items */}
+                {/* <div className="mt-10 flex justify-between w-[60%]">
                   <Dropdown
                     options={businessLineOptions}
                     labelName="Price Type"
@@ -1148,8 +1154,8 @@ export default function AddProduct() {
                       handleOptionClick(option.label);
                     }}
                   />
-                </div>
-                <div className="mt-10 flex justify-between w-[60%]">
+                </div> */}
+                {/* <div className="mt-10 flex justify-between w-[60%]">
                   <InputBox
                     Title="Maximum Price"
                     Placeholder="Enter Maximum Price"
@@ -1167,6 +1173,33 @@ export default function AddProduct() {
                     InputType="number"
                     Inputname="Product-price-Minimum"
                     ErrorMessage="Product minimum price cannot be empty."
+                    onChange={handlePriceChange}
+                    //   isError={isError}
+                    // value={productPrice}
+                    className="number-input"
+                  />
+                </div> */}
+                <div className="mt-10 flex justify-between w-[60%]">
+                  <Dropdown
+                    options={businessLineOptions}
+                    labelName="Price Type"
+                    placeholder="Fixed"
+                    id="business-line"
+                    ErrorMessage="Select any one price"
+                    isError={isDropdownError}
+                    // onChange={handleOptionClick}
+                    defaultOption={selectedOption}
+                    onSelect={(option) => {
+                      console.log("Option in select:", option.label);
+                      handleOptionClick(option.label);
+                    }}
+                  />
+                  <InputBox
+                    Title="Price"
+                    Placeholder="Enter Price"
+                    InputType="number"
+                    Inputname="Product-price"
+                    ErrorMessage="Product price cannot be empty."
                     onChange={handlePriceChange}
                     //   isError={isError}
                     // value={productPrice}
@@ -1312,32 +1345,24 @@ export default function AddProduct() {
                   <div className="flex w-[60%] justify-between">
                     <div className="social-links flex items-center relative flex-col">
                       {inclusionLinks.map((socialMedia, index) => (
-                        <div key={index} className="relative">
-                          <Dropdown
-                            options={[
-                              { label: "Instagram", value: "Instagram" },
-                              { label: "Linkedin", value: "Linkedin" },
-                              { label: "Youtube", value: "Youtube" },
-                            ]}
-                            labelName="Inclusions"
-                            placeholder="Enter Inclusion"
-                            id={`social-media-${index}`}
-                            ErrorMessage="Select any one social media"
-                            onSelect={(option) => {
-                              console.log(
-                                "Selected social media:",
-                                option.label
-                              );
-                            }}
-                            className="mt-10"
+                        <div key={index} className="relative mt-10">
+                          <InputBox
+                            Title="Inclusion"
+                            Placeholder="Enter Inclusion"
+                            InputType="text"
+                            Inputname="Inclusion"
+                            ErrorMessage="Inclusion cannot be empty."
+                            onChange={handleChange}
+                            isError={isError}
+                            value={productName}
                           />
                           <InfoIconfilled
                             onClick={() => toggleInclusionTooltip(index)}
-                            SvgClassName="cursor-pointer absolute left-[20%] top-[35%] top-1"
+                            SvgClassName="cursor-pointer absolute left-[18%] top-[4%] top-1"
                           />
                           {showInclusionTooltip === index && (
                             <div
-                              className="absolute left-[23%] top-[6%] transform -translate-x-1/2"
+                              className="absolute left-[20.3%] -top-8 transform -translate-x-1/2"
                               ref={tooltipRef}
                             >
                               <div className=" bg-white border border-theme text-[#7C7C7C] text-xs py-1 px-2 rounded-md pointer-events-none transition-opacity duration-200 ease-in-out opacity-100">
@@ -1377,37 +1402,24 @@ export default function AddProduct() {
                     </div>
                     <div className="social-links flex items-center relative flex-col">
                       {exclusionLinks.map((socialMedia, index) => (
-                        <div key={index} className="relative">
-                          <Dropdown
-                            options={[
-                              { label: "Instagram", value: "Instagram" },
-                              { label: "Linkedin", value: "Linkedin" },
-                              { label: "Youtube", value: "Youtube" },
-                            ]}
-                            labelName="Exclusions"
-                            placeholder="Enter Exclusions"
-                            id={`social-media-${index}`}
-                            ErrorMessage="Select any one Exclusions"
-                            // isError={isSocialMediaError}
-                            // onChange={handleSocialMediaOption}
-                            // onChange={(type) =>
-                            //   handleSocialMediaOption(index, type)
-                            // }
-                            onSelect={(option) => {
-                              console.log(
-                                "Selected social media:",
-                                option.label
-                              );
-                            }}
-                            className="mt-10"
+                        <div key={index} className="relative mt-10">
+                          <InputBox
+                            Title="Exclusions"
+                            Placeholder="Enter Exclusions"
+                            InputType="text"
+                            Inputname="Exclusions"
+                            ErrorMessage="Exclusions cannot be empty."
+                            onChange={handleChange}
+                            isError={isError}
+                            value={productName}
                           />
                           <InfoIconfilled
                             onClick={() => toggleExclusionTooltip(index)}
-                            SvgClassName="cursor-pointer absolute left-[22%] top-[35%] top-1"
+                            SvgClassName="cursor-pointer absolute left-[22%] top-[5%] top-1"
                           />
                           {showExclusionTooltip === index && (
                             <div
-                              className="absolute left-[24.5%] top-[6%] transform -translate-x-1/2"
+                              className="absolute left-[24%] -top-8  transform -translate-x-1/2"
                               ref={tooltipRef}
                             >
                               <div className=" bg-white border border-theme text-[#7C7C7C] text-xs py-1 px-2 rounded-md pointer-events-none transition-opacity duration-200 ease-in-out opacity-100">
