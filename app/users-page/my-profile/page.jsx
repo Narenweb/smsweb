@@ -297,7 +297,7 @@ export default function Myprofile() {
                                 className=" rounded-lg bg-white lg:w-[375px] shadow-xl min-h-[500px]  hover:bg-userTheme1 cursor-pointer transition-all delay-50 ease-in pb-5"
                               >
                                 <div className="relative w-full">
-                                  <div
+                                  {/* <div
                                     className={`faviroute-icon rounded-full w-10 h-10 bg-[#FFF2F5] absolute z-10 mt-7 cursor-pointer text-primaryColor right-5`}
                                     onClick={() => toggleFavorite(profile.id)}
                                   >
@@ -316,7 +316,7 @@ export default function Myprofile() {
                                     >
                                       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                                     </svg>
-                                  </div>
+                                  </div> */}
                                   <img
                                     src={`https://images.unsplash.com/photo-1496128858413-b36217c2ce36?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=3603&q=80`}
                                     alt=""

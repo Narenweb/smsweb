@@ -15,6 +15,9 @@ const TextInput = ({
   showPasswordToggle = false,
   styles,
   errorMessage,
+  value,
+  setPhoneNumber,
+  emptyError,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [hasValue, setHasValue] = useState(false);
@@ -45,9 +48,10 @@ const TextInput = ({
               type={type === "password" && isPasswordVisible ? "text" : type}
               {...field}
               className={`input-box input-box-place block rounded-md border-0 py-2.5 pr-10 ring-1 ring-inset mt-3 pl-5 w-full max-w-[370px] focus:ring-inset outline-none text-[#767676] shadow-md text-[15px] ${styles}  ${
-                errors[name] ? "ring-red-500" : "ring-[#E1E1E1]"
+                errors[name] || errorMessage ? "ring-red-500" : "ring-[#E1E1E1]"
               }`}
               autoComplete="off"
+              value={value}
               onFocus={() => {
                 setIsFocused(true);
                 setHasValue(!!field.value);
@@ -55,6 +59,10 @@ const TextInput = ({
               onBlur={() => {
                 setIsFocused(false);
                 setHasValue(!!field.value);
+              }}
+              onChange={(e) => {
+                field.onChange(e);
+                setPhoneNumber && setPhoneNumber(e.target.value);
               }}
               placeholder={placeholder}
               inputMode={type === "number" ? "numeric" : "text"} // Set input mode to numeric for number input
@@ -69,15 +77,14 @@ const TextInput = ({
               }}
             />
 
-            {(errors[name] || errorMessage) && (
+            {(errors[name] || errorMessage || emptyError) && (
               <p
                 id="error"
                 className="text-red-500 text-sm mt-3 font-bold pl-2"
               >
-                {errors[name]?.message || errorMessage}
+                {errors[name]?.message || errorMessage || emptyError}
               </p>
             )}
-
             {type === "password" && showPasswordToggle && (
               <button
                 type="button"

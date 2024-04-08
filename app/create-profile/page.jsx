@@ -8,7 +8,7 @@ import UserFooter from "@/components/UserFooter";
 import config from "@/components/config";
 import { useRouter } from "next/navigation";
 import { FaCheck, FaAngleDown, FaPlus } from "react-icons/fa";
-import { FiUpload, FiTrash2 } from "react-icons/fi";
+import { FiUpload, FiTrash2, FiCloudLightning } from "react-icons/fi";
 import { EditIcon } from "../Assets/icons";
 // import "../Assets";
 export default function CreateProfile() {
@@ -32,7 +32,7 @@ export default function CreateProfile() {
     if (typeof window !== "undefined") {
       const storedAccessToken = localStorage.getItem("accessToken");
       const storedActiveSection =
-        parseInt(localStorage.getItem("activeSection")) || 1;
+        parseInt(localStorage.getItem("activeSection")) || 4;
 
       setAccessToken(storedAccessToken);
       setActiveSection(storedActiveSection);
@@ -437,58 +437,60 @@ export default function CreateProfile() {
     //   isCityValid &&
     //   isStateValid
     // ) {
-    try {
-      const profileId = await getAllPartner();
-      const response = await fetch(
-        `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile/${profileId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-            // Add any additional headers if needed
-          },
-          body: JSON.stringify({
-            businessEmail: inputEmailValue,
-            businessPhone: inputPhoneValue,
-            businessWhatsapp: inputWhatsappValue,
-            businessAddress: inputAddressValue,
-            country: countryDefaultValue,
-            state: selectedOptionState,
-            city: selectedOptionCity,
-            zipCode: selectedOptionZip,
-          }),
+    if (isEmailValid) {
+      try {
+        const profileId = await getAllPartner();
+        const response = await fetch(
+          `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile/${profileId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+              // Add any additional headers if needed
+            },
+            body: JSON.stringify({
+              businessEmail: inputEmailValue,
+              businessPhone: inputPhoneValue,
+              businessWhatsapp: inputWhatsappValue,
+              businessAddress: inputAddressValue,
+              country: countryDefaultValue,
+              state: selectedOptionState,
+              city: selectedOptionCity,
+              zipCode: selectedOptionZip,
+            }),
+          }
+        );
+
+        if (response.ok) {
+          // Move to the next section
+          const nextSection = activeSection + 1;
+          setActiveSection(nextSection);
+          // Save the active section to local storage
+          window.scrollTo(350, 350);
+
+          //   // Save the active section to local storage
+          // localStorage.setItem("activeSection", nextSection);
+          // localStorage.setItem("business-email", inputEmailValue);
+          // localStorage.setItem("business-phone", inputPhoneValue);
+          // localStorage.setItem("business-whatsapp", inputWhatsappValue);
+          // localStorage.setItem("business-address", inputAddressValue);
+          // localStorage.setItem("business-media-link", inputMediaLinkValue);
+
+          // // Store selected options in local storage
+          // localStorage.setItem("selectedZip", JSON.stringify(selectedOptionZip));
+          // localStorage.setItem("selectedCity", selectedOptionCity);
+          // localStorage.setItem(
+          //   "selectedState",
+          //   JSON.stringify(selectedOptionState)
+          // );
+        } else {
+          // Handle error response
+          console.error("Error saving data:", response.statusText);
         }
-      );
-
-      if (response.ok) {
-        // Move to the next section
-        const nextSection = activeSection + 1;
-        setActiveSection(nextSection);
-        // Save the active section to local storage
-        window.scrollTo(350, 350);
-
-        //   // Save the active section to local storage
-        // localStorage.setItem("activeSection", nextSection);
-        // localStorage.setItem("business-email", inputEmailValue);
-        // localStorage.setItem("business-phone", inputPhoneValue);
-        // localStorage.setItem("business-whatsapp", inputWhatsappValue);
-        // localStorage.setItem("business-address", inputAddressValue);
-        // localStorage.setItem("business-media-link", inputMediaLinkValue);
-
-        // // Store selected options in local storage
-        // localStorage.setItem("selectedZip", JSON.stringify(selectedOptionZip));
-        // localStorage.setItem("selectedCity", selectedOptionCity);
-        // localStorage.setItem(
-        //   "selectedState",
-        //   JSON.stringify(selectedOptionState)
-        // );
-      } else {
-        // Handle error response
-        console.error("Error saving data:", response.statusText);
+      } catch (error) {
+        console.error("Error saving data:", error.message);
       }
-    } catch (error) {
-      console.error("Error saving data:", error.message);
     }
   };
 
@@ -691,29 +693,31 @@ export default function CreateProfile() {
   //Third section Media
   const [coverPhoto, setCoverPhoto] = useState(null);
   const [profilePhoto, setProfilePhoto] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
 
-  const handleCoverPhotoChange = (e) => {
-    const file = e.target.files[0];
-    console.log("Selected cover photo:", file);
+  const handleCoverPhotoChange = (event) => {
+    const file = event.target.files[0];
+    const url = URL.createObjectURL(file);
+    setImageUrl(url);
     setCoverPhoto(file);
   };
-  useEffect(() => {
-    console.log("Profile photo state:", profilePhoto);
-    console.log("Cover photo state:", coverPhoto);
-  }, [profilePhoto, coverPhoto]);
-
-  const handleProfilePhotoChange = (e) => {
-    const file = e.target.files[0];
-    console.log("Selected profile photo:", file);
+  const handleProfilePhotoChange = (event) => {
+    const file = event.target.files[0];
+    const url = URL.createObjectURL(file);
+    setProfileImageUrl(url);
     setProfilePhoto(file);
   };
 
   const handleDeleteCoverPhoto = () => {
     setCoverPhoto(null);
+    setImageUrl(null);
   };
   const handleDeleteProfilePhoto = () => {
     setProfilePhoto(null);
+    setProfileImageUrl(null);
   };
+
   const fileSizeLimit = 5 * 1024 * 1024;
 
   const handleValidationThree = async () => {
@@ -1017,6 +1021,8 @@ export default function CreateProfile() {
       console.error("Error fetching business categories:", error);
     }
   };
+  const [businessKindId, setBusinessKindId] = useState();
+  const [businessBcId, setBusinessBcId] = useState();
 
   const handlebusinessCategoryChange = (value) => {
     console.log(value);
@@ -1032,7 +1038,8 @@ export default function CreateProfile() {
         return [...prevSelectedCountries, value];
       }
     });
-    setBusinessKindId((prevBkId) => (prevBkId === value ? "" : prevBkId));
+    // setBusinessKindId((prevBkId) => (prevBkId === value ? "" : prevBkId));
+    setBusinessKindId(value);
   };
   // const handleBusinessKindChange = async (selectedState) => {
   //   setCheckKindOptions((prevCheckKindOptions) => {
@@ -1161,7 +1168,8 @@ export default function CreateProfile() {
       }
     });
     // Update businessBcId immediately after updating selectKindOptionsChange
-    setBusinessBcId((prevBcId) => (prevBcId === value ? "" : prevBcId));
+    // setBusinessBcId((prevBcId) => (prevBcId === value ? "" : prevBcId));
+    setBusinessBcId(value);
   };
 
   // const handleValidationFour = async () => {
@@ -1193,8 +1201,6 @@ export default function CreateProfile() {
   // };
 
   const [check, setCheck] = useState();
-  const [businessKindId, setBusinessKindId] = useState();
-  const [businessBcId, setBusinessBcId] = useState();
 
   const handleApi = async (value) => {
     setCheck();
@@ -1206,6 +1212,16 @@ export default function CreateProfile() {
   // });
   // selectKindOptionsChange.forEach((bcId) => {
   //   businessMappings.push({ bcId });
+  // });
+
+  //working for test
+  // selectBusinessKindOptions.forEach((bkId) => {
+  //   const correspondingBcIds = selectKindOptionsChange.map(
+  //     (option) => option
+  //   );
+  //   correspondingBcIds.forEach((bcId) => {
+  //     businessMappings.push({ bkId, bcId });
+  //   });
   // });
   const handleValidationFour = async () => {
     const profileId = await getAllPartner();
@@ -1223,23 +1239,16 @@ export default function CreateProfile() {
       });
     });
 
-    // Iterate over each selected bkId from selectBusinessKindOptions
-    selectBusinessKindOptions.forEach((bkId) => {
-      // Check if the current bkId has an associated bcId in selectKindOptionsChange
-      const associatedBcIds = selectKindOptionsChange.filter(
-        (bcId) => bcId.bkId === bkId
-      );
+    console.log("businessKindId", businessKindId);
+    const bussinessKindObjects = { bkId: businessKindId, bcId: businessBcId };
 
-      // If there are associated bcIds
-      if (associatedBcIds.length > 0) {
-        // Map each bcId to its corresponding bkId
-        associatedBcIds.forEach((bcId) => {
-          businessMappings.push({ bkId, bcId });
-        });
-      } else {
-        // If no associated bcIds are selected, include the bkId with an empty bcId
-        businessMappings.push({ bkId, bcId: "" });
-      }
+    selectBusinessKindOptions.forEach((bkId) => {
+      const correspondingBcIds = selectKindOptionsChange.map(
+        (option) => option
+      );
+      correspondingBcIds.forEach((bcId) => {
+        businessMappings.push({ bkId, bcId: bcId || "" });
+      });
     });
 
     const response = await fetch(
@@ -1433,7 +1442,7 @@ export default function CreateProfile() {
                     ErrorMessage="Business Email is not valid"
                     onChange={handleEmailChange}
                     value={businessEmail}
-                    // isError={isEmailError}
+                    isError={isEmailError}
                   />
                   <InputBox
                     Title="Business Phone"
@@ -1646,55 +1655,44 @@ export default function CreateProfile() {
                   <div className="flex w-[65%] mt-10 justify-between">
                     <div className="cover-photo-section">
                       <p className="mb-4 font-bold text-lg">Cover Photo</p>
-                      {coverPhoto ? (
+                      <div className="cover-photo-section">
                         <div className="file-input-label hover:shadow-lg">
-                          {coverPhoto.size <= fileSizeLimit ? (
-                            ""
-                          ) : (
-                            <>
-                              <FiUpload
-                                size={38}
-                                className="mt-6 mx-auto w-full text-defaultTheme pointer"
-                              />
-                              <input
-                                type="file"
-                                className="file-input pointer h-1/2"
-                                onChange={handleCoverPhotoChange}
-                                accept="image/jpeg, image/png"
-                              />
-                            </>
-                          )}
-                          <p className="text-center px-3 mt-8 font-semibold">
-                            {coverPhoto.size <= fileSizeLimit
-                              ? `File selected: ${coverPhoto.name}`
-                              : "Click to Upload Cover photo or Drag and Drop Here"}
-                          </p>
-                          {coverPhoto.size <= fileSizeLimit && (
-                            <FiTrash2
-                              size={38}
-                              className="mt-6 mx-auto w-full text-defaultTheme pointer"
-                              onClick={handleDeleteCoverPhoto}
-                            />
-                          )}
-                        </div>
-                      ) : (
-                        <label className="file-input-label hover:shadow-lg">
                           <input
                             type="file"
-                            className="file-input"
+                            className="file-input cursor-pointer h-1/2"
                             onChange={handleCoverPhotoChange}
                             accept="image/jpeg, image/png"
+                            multiple
                           />
                           <FiUpload
                             size={38}
                             className="mt-6 mx-auto w-full text-defaultTheme pointer"
                           />
-                          <p className="text-center px-3 mt-3 font-semibold">
+                          <p className="text-center px-3 mt-3 font-semibold cursor-pointer">
                             Click to Upload Cover photo or Drag and Drop Here
                           </p>
-                        </label>
-                      )}
-
+                        </div>
+                        {imageUrl && coverPhoto.size <= fileSizeLimit && (
+                          <div className="mr-4 mt-10 w-[400px] h-[270px] relative">
+                            {coverPhoto && (
+                              <FiTrash2
+                                size={24}
+                                className="absolute top-0 right-0 text-defaultTheme bg-white cursor-pointer"
+                                onClick={handleDeleteCoverPhoto}
+                              />
+                            )}
+                            <img
+                              src={imageUrl}
+                              alt="Selected File"
+                              style={{ width: "400px", height: "270px" }}
+                              className="rounded-lg mb-2"
+                            />
+                            {coverPhoto.size <= fileSizeLimit
+                              ? `File selected: ${coverPhoto.name}`
+                              : ""}
+                          </div>
+                        )}
+                      </div>
                       {coverPhoto && coverPhoto.size > 5 * 1024 * 1024 && (
                         <p className="text-red-500 pt-3">
                           File size exceeds 5MB limit, please select different
@@ -1704,56 +1702,45 @@ export default function CreateProfile() {
                     </div>
 
                     {/* Profile section */}
-                    <div className="profile-photo-section">
+                    <div className="profile-photo-section relative left-10">
                       <p className="mb-4 font-bold text-lg">Profile Photo</p>
-                      {profilePhoto ? (
-                        <div className="file-input-label hover:shadow-lg">
-                          {profilePhoto.size <= fileSizeLimit ? (
-                            ""
-                          ) : (
-                            <>
-                              <FiUpload
-                                size={38}
-                                className="mt-6 mx-auto w-full text-defaultTheme pointer"
+                      <div className="file-input-label hover:shadow-lg">
+                        <input
+                          type="file"
+                          className="file-input cursor-pointer h-1/2"
+                          onChange={handleProfilePhotoChange}
+                          accept="image/jpeg, image/png"
+                          multiple
+                        />
+                        <FiUpload
+                          size={38}
+                          className="mt-6 mx-auto w-full text-defaultTheme pointer"
+                        />
+                        <p className="text-center px-3 mt-3 font-semibold cursor-pointer">
+                          Click to Upload Profile photo or Drag and Drop Here
+                        </p>
+                      </div>
+                      {profileImageUrl &&
+                        profilePhoto.size <= fileSizeLimit && (
+                          <div className="mr-4 mt-10 w-[400px] h-[270px] relative">
+                            {profilePhoto && (
+                              <FiTrash2
+                                size={24}
+                                className="absolute top-0 right-0 text-defaultTheme bg-white cursor-pointer"
+                                onClick={handleDeleteProfilePhoto}
                               />
-                              <input
-                                type="file"
-                                className="file-input pointer h-[45%] relative bottom-40 w-[380px]"
-                                onChange={handleProfilePhotoChange}
-                                accept="image/jpeg, image/png"
-                              />
-                            </>
-                          )}
-                          <p className="text-center px-3 mt-8 font-semibold cursor-pointer">
+                            )}
+                            <img
+                              src={profileImageUrl}
+                              alt="Selected File"
+                              style={{ width: "400px", height: "270px" }}
+                              className="rounded-lg mb-2"
+                            />
                             {profilePhoto.size <= fileSizeLimit
                               ? `File selected: ${profilePhoto.name}`
-                              : "Click to Upload Cover photo or Drag and Drop Here"}
-                          </p>
-                          {profilePhoto.size <= fileSizeLimit && (
-                            <FiTrash2
-                              size={38}
-                              className="mt-6 mx-auto w-full text-defaultTheme pointer"
-                              onClick={handleDeleteProfilePhoto}
-                              accept="image/jpeg, image/png"
-                            />
-                          )}
-                        </div>
-                      ) : (
-                        <label className="file-input-label hover:shadow-lg">
-                          <input
-                            type="file"
-                            className="file-input"
-                            onChange={handleProfilePhotoChange}
-                          />
-                          <FiUpload
-                            size={38}
-                            className="mt-6 mx-auto w-full text-defaultTheme pointer"
-                          />
-                          <p className="text-center px-3 mt-3 font-semibold">
-                            Click to Upload Profile photo or Drag and Drop Here
-                          </p>
-                        </label>
-                      )}
+                              : ""}
+                          </div>
+                        )}
 
                       {profilePhoto && profilePhoto.size > 5 * 1024 * 1024 && (
                         <p className="text-red-500 pt-3 h-10">

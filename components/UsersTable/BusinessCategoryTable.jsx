@@ -875,28 +875,28 @@ export default function BusinessCategoryTable() {
             <div className="inline-block min-w-[100%] py-2 align-middle sm:px-6 lg:px-8">
               <table className="min-w-full divide-y divide-transparent">
                 <thead>
-                  <tr>
-                    <th
+               <tr className=" flex justify-between w-[65%]">
+                   <th
                       scope="col"
-                      className="py-3.5 pl-6 pr-3 text-left text-sm font-semibold text-gray-900"
+                      className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-5 w-[18%] lg:w-[25%]"
                     >
                       Name
                     </th>
                     <th
                       scope="col"
-                      className="py-3.5 text-left text-sm font-semibold text-gray-900 sm:pl-0 relative right-1"
+                      className="py-3.5 text-left text-sm font-semibold text-gray-900 sm:pl-0 w-[30%] lg:w-[20%] relative left-5"
                     >
                       Business Line
                     </th>
-                    <th
+                     <th
                       scope="col"
-                      className="pl-1 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      className="px-1 py-3.5 text-left text-sm font-semibold text-gray-900 w-[14%] relative right-1"
                     >
                       Enable
                     </th>
                     <th
                       scope="col"
-                      className="pl-1 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      className="px-1 py-3.5 text-left text-sm font-semibold text-gray-900 relative right-12"
                     >
                       Active
                     </th>
@@ -924,66 +924,56 @@ export default function BusinessCategoryTable() {
                       )
                       .slice(0, recordsPerPage)
                       .map((row) => (
-                        <tr key={row.id}>
+                        <tr
+                          key={row.id}
+                          className=" bg-white rounded-[10px] flex items-center justify-between py-[16px] mb-3 px-4 w-full"
+                        >
                           <td className="w-[25%]">
-                            <div className="mb-3 pl-4 py-[25px] bg-white border-none rounded-l-[10px] ">
-                              <button
-                                className="px-1 hover:text-primaryColor rounded transition-all delay-[30]"
-                                onClick={() => handleShowSideNav(row.id)}
-                              >
-                                <span className="block max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
-                                  {row.name}
-                                </span>
-                              </button>
-                            </div>
+                            <button
+                              className="px-1 hover:text-primaryColor rounded transition-all delay-[30]"
+                              onClick={() => handleShowSideNav(row.id)}
+                            >
+                              <span className="block max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                {row.name}
+                              </span>
+                            </button>
                           </td>
-                          <td className="relative right-1 font-light w-[20%]">
-                            <div className="mb-3 py-[25px] bg-white ">
+                          <td className="relative right-1 font-light w-[35%] lg:w-[20%]">
                               {businessLineNamesMap[row.blId] || "N/A"}
-                            </div>
                           </td>
                           <td className="relative right-2 w-[14%]">
-                            <div className="py-[25px] px-3 mb-3 bg-white">
-                              <Toggle
-                                checked={row.enable}
-                                onToggle={(value) =>
-                                  handleMainToggle(row.id, "enable", value)
-                                }
-                              />
-                            </div>
+                            <Toggle
+                              checked={row.enable}
+                              onToggle={(value) =>
+                                handleMainToggle(row.id, "enable", value)
+                              }
+                            />
                           </td>
                           <td className="relative right-3 w-[27%]">
-                            <div className="py-[25px] px-3 mb-3 bg-white">
-                              <Toggle
-                                checked={row.active}
-                                onToggle={(value) =>
-                                  handleMainToggle(row.id, "active", value)
-                                }
-                              />
-                            </div>
+                            <Toggle
+                              checked={row.active}
+                              onToggle={(value) =>
+                                handleMainToggle(row.id, "active", value)
+                              }
+                            />
                           </td>
 
                           <td className="relative right-4 ">
                             {/* Edit Icon */}
-                            <div className="py-[16.5px] mb-3 bg-white pr-2">
-                              {/* Edit Icon */}
-                              <button
-                                className="px-6 py-2 text-white hover:bg-transparent border hover:border-primaryColor hover:text-primaryColor bg-primaryColor rounded-lg cursor-pointer group transition-all delay-75"
-                                onClick={() => handleEdit(row)}
-                              >
-                                <div className="flex items-center">
-                                  <span className="mr-2.5">Edit</span>
-                                  <EditIcon PathClassName="group-hover:fill-primaryColor transition-all delay-75" />
-                                </div>
-                              </button>
-                            </div>
+                            <button
+                              className="px-6 py-2 text-white hover:bg-transparent border hover:border-primaryColor hover:text-primaryColor bg-primaryColor rounded-lg cursor-pointer group transition-all delay-75"
+                              onClick={() => handleEdit(row)}
+                            >
+                              <div className="flex items-center">
+                                <span className="mr-2.5">Edit</span>
+                                <EditIcon PathClassName="group-hover:fill-primaryColor transition-all delay-75" />
+                              </div>
+                            </button>
                           </td>
                           <td className="relative right-5 ">
-                            <div className="py-[21.8px] mb-3 bg-white rounded-r-[10px] pr-1">
-                              <button className="px-3 rounded text-white hover:bg-gray-100 ">
-                                <RightIcon />
-                              </button>
-                            </div>
+                            <button className="ml-4 px-3 rounded text-white hover:bg-gray-100 ">
+                              <RightIcon />
+                            </button>
                           </td>
                           {/* <td className="whitespace-nowrap py-4 text-sm text-gray-500">
                         <button className="px-3 py-1 ml-2  text-customRed rounded hover:bg-gray-100" onClick={() => handleDelete(person.id)}>

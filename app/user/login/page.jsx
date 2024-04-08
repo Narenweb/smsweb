@@ -1,12 +1,18 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation"; // Import useRouter from 'next/router'
 import TextInput from "@/components/TextInput";
+import TextInputBox from "@/components/TextInputBox";
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import config from "@/components/config";
 import { useAuth } from "../../AuthContext";
-export default function AdminLogin() {
+import LoginImage from "../../../public/images/login.png";
+import RoundLogo from "../../../public/images/round-logo.png";
+import { EditIcon } from "@/app/Assets/icons";
+import InputBox from "@/components/CustomInput";
+export default function UserLogin() {
   const router = useRouter();
   const {
     control,
@@ -17,10 +23,14 @@ export default function AdminLogin() {
       mobile: "",
     },
   });
+  const [activeSection, setActiveSection] = useState(1);
   const [accountError, setAccountError] = useState("");
+  const [emptyError, setEmptyError] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [otpToken, setOtpToken] = useState("");
-  const { setAuth } = useAuth();
+  const [storedPhoneNumber, setStoredPhoneNumber] = useState("");
+  const { authData, setAuth } = useAuth();
+
   useEffect(() => {
     if (accountError) {
       const timer = setTimeout(() => {
@@ -30,6 +40,15 @@ export default function AdminLogin() {
       return () => clearTimeout(timer);
     }
   }, [accountError]);
+
+  useEffect(() => {
+    if (authData) {
+      const { phoneNumber } = authData;
+      const formattedPhoneNumber = phoneNumber && phoneNumber.slice(2);
+      setStoredPhoneNumber(formattedPhoneNumber);
+      console.log("storedPhoneNumber", storedPhoneNumber);
+    }
+  }, [authData]);
 
   const generateOTP = async (phoneNumber, tenantId) => {
     try {
@@ -83,9 +102,9 @@ export default function AdminLogin() {
     }
   };
 
-  const onSubmit = async (data) => {
+  const onSubmit = async () => {
     try {
-      const phoneNumber = `91${data.mobile}`;
+      const phoneNumber = `91${storedPhoneNumber}`;
       const tenantId = "64ad025e4b10231342f7e9e6";
 
       if (
@@ -98,12 +117,13 @@ export default function AdminLogin() {
 
       if (otpToken) {
         setMobileNumber(phoneNumber);
-
+        setEmptyError("Phone Number is required");
         // Set auth data in the context
         setAuth({ otpToken, phoneNumber });
 
         // Navigate to OTP page
-        router.push("/otp");
+        router.push("/user/otp");
+        setActiveSection(activeSection + 1);
       }
 
       await checkAccount(phoneNumber, tenantId);
@@ -111,46 +131,74 @@ export default function AdminLogin() {
       console.error("Error during login:", error.message);
     }
   };
+
   return (
     <>
-      <div className="flex min-h-full h-[100vh] flex-1">
-        <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
-          <div className="mx-auto w-full max-w-sm lg:w-96">
+      <div className="flex min-h-full h-[100vh] justify-between">
+        <div className="relative hidden lg:block mr-auto w-1/2">
+          <Image
+            src={LoginImage}
+            alt="LoginImage-img"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </div>
+        <div className="absolute left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%]  w-[200px] h-[200px] hidden lg:block">
+          <Image
+            src={RoundLogo}
+            alt="RoundLogo-img"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </div>
+        <div
+          className={`flex min-w-full lg:min-w-[550px] w-1/2  flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24 bg-userTheme ${
+            activeSection === 1 ? "block" : "hidden"
+          }`}
+        >
+          <div className="mx-auto w-full max-w-sm ">
             <div>
-              <h2 className="mt-8 mb-5 text-2xl font-bold leading-6 tracking-tight text-gray-900">
-                Login to your admin account
+              <h2 className="mt-8 text-3xl font-bold tracking-wider text-gray-900 text-center">
+                Sign In
               </h2>
             </div>
-
-            <div className="mt-10">
+            <div className="mt-6">
               <div>
                 <form
                   action="/business-config"
                   method=""
-                  className="space-y-6"
                   onSubmit={handleSubmit(onSubmit)}
                 >
-                  <div className="flex items-end space-x-1 relative">
+                  <div className="flex items-end space-y-12 relative flex-col ml-5">
                     <span
-                      className={`text-lg absolute left-0 z-10 text-gray-500 ${
-                        errors.mobile || accountError
-                          ? "bottom-[40px]"
+                      className={`text-lg absolute left-2 z-10 text-gray-500 ${
+                        errors.mobile
+                          ? "bottom-[42px]"
+                          : accountError
+                          ? "bottom-[62px]"
                           : "bottom-[10px]"
                       }`}
                     >
                       +91
                     </span>
 
-                    <TextInput
+                    <TextInputBox
                       control={control}
                       errors={errors}
                       name="mobile"
                       label="Mobile No"
                       type="number"
-                      styles="pl-8 text-lg text-gray-500"
+                      styles="pl-[45px] text-lg text-gray-500 number-input"
                       errorMessage={accountError}
+                      // emptyError={emptyError}
+                      value={storedPhoneNumber}
+                      setPhoneNumber={setStoredPhoneNumber}
+                      // onChange={(e) => {
+                      //   setPhoneNumber(e.target.value);
+                      // }}
+                      placeholder="Enter Phone Number"
                       rules={{
-                        required: "Mobile is required",
+                        required: !storedPhoneNumber
+                          ? "Phone Number is required"
+                          : undefined,
                         pattern: {
                           value: /^[0-9]+$/,
                           message: "Mobile must contain only numbers",
@@ -159,28 +207,34 @@ export default function AdminLogin() {
                           value: 10,
                           message: "Mobile must be 10 characters",
                         },
+                        // ...(!storedPhoneNumber &&
+                        //   storedPhoneNumber.trim() === "" && {
+                        //     required: "Phone Number is required",
+                        //   }),
                       }}
                     />
                   </div>
                   <div>
                     <button
                       type="submit"
-                      className="flex w-full justify-center rounded-md bg-theme px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-lightTheme focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                      className="flex mt-10 justify-center rounded-md bg-primaryColor px-3 py-2 text-sm font-semibold leading-6  text-white shadow-sm hover:bg-[#e71f58] w-full max-w-[370px] text-bold hover:shadow-md ml-5 mr-3 "
                     >
                       Get OTP
                     </button>
+                    <div className="flex gap-2 mt-10 justify-center">
+                      <p>Don't have an account? </p>
+                      <Link
+                        href={"/user/signup"}
+                        className="text-theme underline font-semibold tracking-wider hover:text-primaryColor"
+                      >
+                        SIGN UP
+                      </Link>
+                    </div>
                   </div>
                 </form>
               </div>
             </div>
           </div>
-        </div>
-        <div className="relative hidden w-0 flex-1 lg:block">
-          <img
-            className="absolute inset-0 h-full w-full object-cover"
-            src="https://images.unsplash.com/photo-1496917756835-20cb06e75b4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1908&q=80"
-            alt=""
-          />
         </div>
       </div>
     </>

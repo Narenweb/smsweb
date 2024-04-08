@@ -121,6 +121,9 @@ export default function AddProduct() {
   const [selectedOptions, setSelectedOptions] = useState({
     options: null,
   });
+  const [selectedKindOptions, setSelectedKindOptions] = useState({
+    options: null,
+  });
   const [showTooltip, setShowTooltip] = useState(false);
   const tooltipRef = useRef(null);
   const handleClickOutside = (event) => {
@@ -151,65 +154,82 @@ export default function AddProduct() {
       prevIndex === index ? null : index
     );
   };
+  const [profileId, setProfileId] = useState(null);
+  const [isDataSubmitted, setIsDataSubmitted] = useState(false);
+  const [isDescError, setIsDescError] = useState(false);
+  const [isCategoryError, setIsCategoryError] = useState(false);
+  const [isBusinessKindError, setIsBusinessKindError] = useState(false);
+  useEffect(() => {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const accountIdParam = urlParams.get("profileId");
+    setProfileId(accountIdParam);
+  }, [profileId]);
+
   const handleValidationOne = async () => {
-    // const inputValue = document.getElementById("business-name").value;
-    // const isNameValid = inputValue.trim() !== "";
-    // setIsError(!isNameValid);
-    // // Check if the business line is valid
-    // const selectedOption = selectedOptions.options;
-    // console.log("Selected Option:", selectedOption);
-    // const isBusinessLineValid = selectedOption !== null;
-    // setIsDropdownError(!isBusinessLineValid);
-    const nextSection = activeSection + 1;
-    setActiveSection(nextSection);
-    window.scrollTo(350, 350);
-    // if (isNameValid && isBusinessLineValid) {
-    //   try {
-    //     let apiUrl = `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile`;
-    //     let method = "POST";
+    const productName = document.getElementById("Product-name").value;
+    const isProductNameValid = productName.trim() !== "";
+    setIsError(!isProductNameValid);
+    const productDesc = document.getElementById("Product-Description").value;
+    const isProductDescValid = productDesc.trim() !== "";
+    setIsDescError(!isProductDescValid);
 
-    //     // Check if data has been submitted before
-    //     if (isDataSubmitted) {
-    //       const profileId = await getAllPartner();
-    //       if (!profileId) {
-    //         console.error("Failed to get business profile ID");
-    //         return;
-    //       }
-    //       // Use PUT API
-    //       apiUrl += `/${profileId}`;
-    //       method = "PUT";
-    //     }
+    const selectedOption = selectedOptions.options;
+    const selectedKindOption = selectedKindOptions.options;
+    const isBusinessCategoryValid = selectedOption !== null;
+    setIsCategoryError(!isBusinessCategoryValid);
+    const isBusinessKindValid = selectedKindOption !== null;
+    setIsBusinessKindError(!isBusinessKindValid);
+    if (true) {
+      try {
+        let apiUrl = `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile/${profileId}/product`;
+        // https://api.urbanbarrow.com/tenant/admin/user/v2/partner/24929081-5916-4a49-b169-11d5b3206c5b/business/profile/646601a4-81ec-40c2-a89b-b49a4885de63/product
+        let method = "POST";
 
-    //     const response = await fetch(apiUrl, {
-    //       method,
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //         Authorization: `Bearer ${accessToken}`,
-    //       },
-    //       body: JSON.stringify({
-    //         businessName: inputValue,
-    //         businessLine: selectedOption,
-    //       }),
-    //     });
-    //     if (response.ok) {
-    //       // Move to the next section
-    //       const nextSection = activeSection + 1;
-    //       setActiveSection(nextSection);
-    //       // Save the active section to local storage
-    //       // localStorage.setItem("business-name", inputValue);
-    //       // localStorage.setItem("activeSection", nextSection);
-    //       window.scrollTo(350, 350);
-    //     } else {
-    //       // Handle error response
-    //       console.error("Error saving data:", response.statusText);
-    //     }
-    //     if (!isDataSubmitted) {
-    //       setIsDataSubmitted(true);
-    //     }
-    //   } catch (error) {
-    //     console.error("Error saving data:", error.message);
-    //   }
-    // }
+        // Check if data has been submitted before
+        if (isDataSubmitted) {
+          const profileId = await getAllPartner();
+          if (!profileId) {
+            console.error("Failed to get business profile ID");
+            return;
+          }
+          // Use PUT API
+          apiUrl += `/${profileId}`;
+          method = "PUT";
+        }
+
+        const response = await fetch(apiUrl, {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            businessName: productName,
+            businessLine: productDesc,
+            businessCategory: selectedOption,
+            businessKind: selectedKindOption,
+          }),
+        });
+        if (response.ok) {
+          // Move to the next section
+          const nextSection = activeSection + 1;
+          setActiveSection(nextSection);
+          // Save the active section to local storage
+          // localStorage.setItem("business-name", inputValue);
+          // localStorage.setItem("activeSection", nextSection);
+          window.scrollTo(350, 350);
+        } else {
+          // Handle error response
+          console.error("Error saving data:", response.statusText);
+        }
+        if (!isDataSubmitted) {
+          setIsDataSubmitted(true);
+        }
+      } catch (error) {
+        console.error("Error saving data:", error.message);
+      }
+    }
   };
   //secondSection
 
@@ -304,7 +324,6 @@ export default function AddProduct() {
   const [productDescription, setProductDescription] = useState(null);
   //firstSection
   const handleChange = (e) => {
-    // Clear the error when the user starts typing
     setProductName(e.target.value);
     setIsError(false);
   };
@@ -312,7 +331,7 @@ export default function AddProduct() {
   const handleDescriptionChange = (e) => {
     // Clear the error when the user starts typing
     setProductDescription(e.target.value);
-    setIsError(false);
+    setIsDescError(false);
   };
 
   const handlePriceChange = (e) => {
@@ -335,6 +354,23 @@ export default function AddProduct() {
     // If needed, update any other state based on the selected option
     if (selectedOption) {
       setSelectedOptions({
+        options: selectedOption.label,
+      });
+    }
+  };
+
+  //dummy
+    const handleKindOptionClick = (selectedLabel) => {
+
+    console.log("selectedOption", selectedLabel);
+    const selectedOption = businessLineOptions.find(
+      (option) => option.label === selectedLabel
+    );
+    setSelectedOption(selectedLabel);
+
+    // If needed, update any other state based on the selected option
+    if (selectedOption) {
+      setSelectedKindOptions({
         options: selectedOption.label,
       });
     }
@@ -527,29 +563,50 @@ export default function AddProduct() {
   };
 
   //Third section Media
-  const [coverPhoto, setCoverPhoto] = useState(null);
-  const [imageUrl, setImageUrl] = useState(null);
+
+  const [coverPhotos, setCoverPhotos] = useState([]);
+  const [imageUrls, setImageUrls] = useState([]);
+  const [hasLargeFile, setHasLargeFile] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+
+  const handleCheckboxChange = (index) => {
+    setSelectedImageIndex(index);
+  };
   const handleCoverPhotoChange = (event) => {
-    const file = event.target.files[0];
-    const url = URL.createObjectURL(file);
-    setImageUrl(url);
-    setCoverPhoto(file);
-    console.log("clicked");
-  };
-  //   const handleCoverPhotoChange = (e) => {
-  //     const file = e.target.files[0];
-  //     console.log("Selected cover photo:", file);
-  //     setCoverPhoto(file);
-  //   };
-  useEffect(() => {
-    console.log("Cover photo state:", coverPhoto);
-  }, [coverPhoto]);
+    const files = event.target.files;
 
-  const handleDeleteCoverPhoto = () => {
-    setCoverPhoto(null);
-    setImageUrl(null);
+    const newCoverPhotos = [...coverPhotos];
+    const newImageUrls = [...imageUrls];
+    let hasLargeFile = false;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const url = URL.createObjectURL(file);
+      newCoverPhotos.push(file);
+      newImageUrls.push(url);
+
+      // Check if the file exceeds the size limit
+      if (file.size > 5 * 1024 * 1024) {
+        hasLargeFile = true;
+      }
+    }
+    // Update the state to reflect if a large file is found
+    setHasLargeFile(hasLargeFile);
+
+    setCoverPhotos(newCoverPhotos);
+    setImageUrls(newImageUrls);
   };
 
+  const handleDeleteCoverPhoto = (index) => {
+    const newCoverPhotos = [...coverPhotos];
+    const newImageUrls = [...imageUrls];
+
+    newCoverPhotos.splice(index, 1);
+    newImageUrls.splice(index, 1);
+
+    setCoverPhotos(newCoverPhotos);
+    setImageUrls(newImageUrls);
+  };
   const fileSizeLimit = 5 * 1024 * 1024;
 
   const handleValidationTwo = async () => {
@@ -1055,7 +1112,11 @@ export default function AddProduct() {
             </div>
 
             {/* Details */}
-            <div className="flex relative left-[150px] mb-40 containerBox">
+            <div
+              className={`${
+                activeSection === 2 ? "" : "left-[150px]"
+              } flex relative  mb-40 containerBox`}
+            >
               {/* Section 1 */}
               <div
                 className={`general-information section w-full ml-20 left-[60px] relative ${
@@ -1084,7 +1145,7 @@ export default function AddProduct() {
                     Inputname="Product-Description"
                     ErrorMessage="Product Description cannot be empty."
                     onChange={handleDescriptionChange}
-                    //   isError={isError}
+                    isError={isDescError}
                     value={productDescription}
                     isDesc
                   />
@@ -1097,7 +1158,7 @@ export default function AddProduct() {
                       placeholder="Select Business Category"
                       id="business-category"
                       ErrorMessage="Select any one Business category"
-                      isError={isDropdownError}
+                      isError={isCategoryError}
                       // onChange={handleOptionClick}
                       defaultOption={selectedOption}
                       onSelect={(option) => {
@@ -1129,7 +1190,7 @@ export default function AddProduct() {
                     placeholder="Select Business Type"
                     id="business-type"
                     ErrorMessage="Select any one Business Line"
-                    isError={isDropdownError}
+                    isError={isBusinessKindError}
                     // onChange={handleOptionClick}
                     defaultOption={selectedOption}
                     onSelect={(option) => {
@@ -1188,10 +1249,10 @@ export default function AddProduct() {
                     ErrorMessage="Select any one price"
                     isError={isDropdownError}
                     // onChange={handleOptionClick}
-                    defaultOption={selectedOption}
+                    defaultOption={selectedKindOptions}
                     onSelect={(option) => {
                       console.log("Option in select:", option.label);
-                      handleOptionClick(option.label);
+                      handleKindOptionClick(option.label);
                     }}
                   />
                   <InputBox
@@ -1221,87 +1282,32 @@ export default function AddProduct() {
               </div>
               {/* Section 2 */}
               <div
-                className={`media section w-full relative left-[70px] ${
+                className={`media section w-full relative ${
                   activeSection === 2 ? "block" : "hidden"
                 }`}
               >
-                <p className="font-semibold text-2xl">Media</p>
-                <div className="flex w-[65%] mt-10 justify-center ">
-                  {imageUrl && coverPhoto.size <= fileSizeLimit && (
-                    <div className="mr-4 w-[500px] h-[270px]">
-                      <img
-                        src={imageUrl}
-                        alt="Selected File"
-                        style={{ width: "500px", height: "270px" }}
-                        className="rounded-lg"
-                      />
-                      {coverPhoto && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <input
-                            type="checkbox"
-                            name={"product-image"}
-                            className="transform scale-125 cursor-pointer "
-                            //   checked={selectedCountry.includes(location.name)}
-                            //   onChange={() => handleOptionChange(location.name)}
-                          />
-                          <p className="font-bold text-[#767676]">
-                            Make this profile picture
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                <p className="font-semibold text-2xl relative left-[220px]">
+                  Media
+                </p>
+                <div className="flex w-[65%] mt-10 justify-center relative left-[220px] ">
                   <div className="cover-photo-section">
-                    {coverPhoto ? (
-                      <div className="image-input hover:shadow-lg p-2 cursor-pointer w-[400px] h-[270px] border-2 border-dotted border-theme rounded-lg flex justify-center items-center flex-col">
-                        {coverPhoto.size <= fileSizeLimit ? (
-                          ""
-                        ) : (
-                          <>
-                            <FiUpload
-                              size={38}
-                              className="mt-6 mx-auto w-full text-defaultTheme pointer"
-                            />
-                            <input
-                              type="file"
-                              className="file-input cursor-pointer h-1/2"
-                              onChange={handleCoverPhotoChange}
-                              accept="image/jpeg, image/png"
-                            />
-                          </>
-                        )}
-                        <p className="text-center px-3 mt-8 font-semibold cursor-pointer">
-                          {coverPhoto.size <= fileSizeLimit
-                            ? `File selected: ${coverPhoto.name}`
-                            : "Click to Upload Cover photo or Drag and Drop Here"}
-                        </p>
-                        {coverPhoto.size <= fileSizeLimit && (
-                          <FiTrash2
-                            size={38}
-                            className="mt-6 mx-auto w-full text-defaultTheme pointer"
-                            onClick={handleDeleteCoverPhoto}
-                          />
-                        )}
-                      </div>
-                    ) : (
-                      <label className="image-input hover:shadow-lg p-2 cursor-pointer w-[400px] h-[270px] border-2 border-dotted border-theme rounded-lg flex justify-center items-center flex-col">
-                        <input
-                          type="file"
-                          className="file-input"
-                          onChange={handleCoverPhotoChange}
-                          accept="image/jpeg, image/png"
-                        />
-                        <FiUpload
-                          size={38}
-                          className="mx-auto w-full text-defaultTheme cursor-pointer"
-                        />
-                        <p className="text-center px-3 mt-3 font-semibold cursor-pointer">
-                          Click to Upload Cover photo or Drag and Drop Here
-                        </p>
-                      </label>
-                    )}
-
-                    {coverPhoto && coverPhoto.size > 5 * 1024 * 1024 && (
+                    <div className="image-input hover:shadow-lg p-2 cursor-pointer w-[400px] h-[270px] border-2 border-dotted border-theme rounded-lg flex justify-center items-center flex-col">
+                      <input
+                        type="file"
+                        className="file-input cursor-pointer h-1/2"
+                        onChange={handleCoverPhotoChange}
+                        accept="image/jpeg, image/png"
+                        multiple
+                      />
+                      <FiUpload
+                        size={38}
+                        className="mx-auto w-full text-defaultTheme cursor-pointer"
+                      />
+                      <p className="text-center px-3 mt-3 font-semibold cursor-pointer">
+                        Click to Upload Cover photo or Drag and Drop Here
+                      </p>
+                    </div>
+                    {hasLargeFile && (
                       <p className="text-red-500 pt-3 flex items-start">
                         File size exceeds 5MB limit, please select different
                         photo
@@ -1309,30 +1315,67 @@ export default function AddProduct() {
                     )}
                   </div>
                 </div>
-                <button
-                  className="bg-primaryColor text-white text-lg font-bold px-6 py-2 rounded-md relative mt-24 curser-pointer"
-                  onClick={handleBack}
-                >
-                  <span
-                    aria-hidden="true"
-                    className="hidden transition-transform transform sm:inline-block mr-3 group-hover:translate-x-1"
+                <div className="grid grid-cols-3 gap-4 mt-10 justify-center">
+                  {imageUrls.map(
+                    (url, index) =>
+                      coverPhotos[index].size <= fileSizeLimit && (
+                        <div key={index} className="relative">
+                          <FiTrash2
+                            size={24}
+                            className="absolute top-0 right-0 text-defaultTheme bg-white  cursor-pointer"
+                            onClick={() => handleDeleteCoverPhoto(index)}
+                          />
+                          <img
+                            src={url}
+                            alt="Selected File"
+                            style={{ width: "500px", height: "270px" }}
+                            className="rounded-lg mb-1"
+                          />
+                          {coverPhotos[index].size <= fileSizeLimit
+                            ? `File selected: ${coverPhotos[index].name}`
+                            : ""}
+                          <div className="flex items-center gap-2 mt-2">
+                            <input
+                              type="checkbox"
+                              name={"product-image"}
+                              className="transform scale-125 cursor-pointer"
+                              checked={selectedImageIndex === index}
+                              onChange={() => handleCheckboxChange(index)}
+                            />
+                            <p className="font-bold text-[#767676]">
+                              Make this profile picture
+                            </p>
+                          </div>
+                        </div>
+                      )
+                  )}
+                </div>
+                <div className="relative left-[220px]">
+                  <button
+                    className="bg-primaryColor text-white text-lg font-bold px-6 py-2 rounded-md relative mt-24 curser-pointer"
+                    onClick={handleBack}
                   >
-                    &larr;
-                  </span>
-                  Back{" "}
-                </button>
-                <button
-                  className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative left-[46%] mt-24"
-                  onClick={handleValidationTwo}
-                >
-                  Continue{" "}
-                  <span
-                    aria-hidden="true"
-                    className="hidden transition-transform transform sm:inline-block ml-2 group-hover:translate-x-1"
+                    <span
+                      aria-hidden="true"
+                      className="hidden transition-transform transform sm:inline-block mr-3 group-hover:translate-x-1"
+                    >
+                      &larr;
+                    </span>
+                    Back{" "}
+                  </button>
+                  <button
+                    className="bg-primaryColor text-white text-lg font-bold px-5 py-2 rounded-md relative left-[46%] mt-24"
+                    onClick={handleValidationTwo}
                   >
-                    &rarr;
-                  </span>
-                </button>
+                    Continue{" "}
+                    <span
+                      aria-hidden="true"
+                      className="hidden transition-transform transform sm:inline-block ml-2 group-hover:translate-x-1"
+                    >
+                      &rarr;
+                    </span>
+                  </button>
+                </div>
               </div>
               {/* Section 3 */}
               <div

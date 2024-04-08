@@ -461,7 +461,7 @@ export default function UserPortal() {
                       <div>
                         <div className="flex mt-6">
                           <div
-                            className={`border-2 border-theme rounded-l-lg border-r-0 text-theme py-2 px-16 hover:bg-theme hover:text-white transition ease delay-75 cursor-pointer hover:border-l-white ${
+                            className={`border-2 border-theme rounded-l-lg border-r-0 text-theme py-2 px-16 hover:bg-theme hover:text-white transition ease delay-75 cursor-pointer ${
                               childActiveSection === "Products"
                                 ? "text-white bg-theme"
                                 : "border-theme text-theme bg-transparent"
@@ -487,8 +487,14 @@ export default function UserPortal() {
                               <div className="mx-auto grid max-w-2xl grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10 sm:gap-y-10 xl:mx-0 xl:max-w-none lg:grid-cols-2 xl:grid-cols-3">
                                 <article className="flex flex-col items-start justify-between rounded-lg  shadow-lg bg-userTheme border-2 border-[#E4BDF4] cursor-pointer">
                                   <Link
+                                    href={{
+                                      pathname: "/add-product",
+                                      query: {
+                                        accountId: accountIds,
+                                        profileId: profileIds,
+                                      },
+                                    }}
                                     className="relative w-full flex justify-center items-center h-full flex-col"
-                                    href="/add-product"
                                   >
                                     <BoxIcon />
                                     <p className="text-2xl font-semibold w-[200px] text-center text-theme mt-3">

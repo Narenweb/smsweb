@@ -55,7 +55,7 @@ export default function BusinessConfig() {
                 {/* Tabs */}
                 <div className="mt-4 sm:mt-9">
                   <div className="hidden sm:block">
-                    <div className="flex items-center border-b border-[#B9B9B9] w-[540px] pb-[15px] ">
+                    <div className="flex items-center border-b border-[#B9B9B9] w-[44%] pb-[15px] ">
                       <nav
                         className="-mb-px flex flex-1 space-x-6 xl:space-x-24"
                         aria-label="Tabs"

@@ -247,7 +247,7 @@ export default function AdminLogin() {
                     <TextInputBox
                       control={control}
                       errors={errors}
-                      name="mobile"
+                      name="Name"
                       label="Name"
                       type="text"
                       styles="pl-3 text-lg text-gray-500"
@@ -305,7 +305,7 @@ export default function AdminLogin() {
                     <div className="flex gap-2 mt-10 justify-center">
                       <p>Don't have an account? </p>
                       <Link
-                        href={"/login"}
+                        href={"/user/login"}
                         className="text-theme underline font-semibold tracking-wider hover:text-primaryColor"
                       >
                         SIGN IN

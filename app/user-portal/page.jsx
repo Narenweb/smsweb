@@ -187,10 +187,10 @@ export default function UserPortal() {
         <div className="flex flex-1 flex-col overflow-hidden">
           <UserHeader isLoginPage value1={true} />
           {/* hero section */}
-          <section className="hero-section w-full h-auto top-0 relative mb-10 sm:mb-20 lg:h-[75%] bg-userTheme">
+          <section className="hero-section w-full h-auto top-10 relative mb-10 sm:mb-20 lg:h-[75%] bg-userTheme">
             <div className="containerBox relative md:left-20 lg:left-32">
-              <div className=" pt-0 flex flex-col mt-36 sm:mt-40 ">
-                <h1 className=" font-[300] text-dark mb-5 sm:mb-10 sm:w-[55%] text-5xl leading-[1.3]">
+              <div className=" pt-0 flex flex-col mt-36 ">
+                <h1 className=" font-light text-dark mb-5 sm:mb-10 sm:w-[55%] text-5xl leading-[1.3]">
                   We set up your space to celebrate your{" "}
                   <span className="font-bold">Birthday Party</span>
                 </h1>
@@ -269,8 +269,8 @@ export default function UserPortal() {
                 Search Professionals
               </button>
             </div>
-            <div className="mt-10 sm:mt-28 containerBox w-full">
-              <dl className="rounded-lg flex-row flex w-full justify-around text-white">
+            <div className="mt-10 sm:mt-28 containerBox w-full relative top-14 lg:top-16">
+              <div className="rounded-lg flex-row flex w-full justify-around text-white">
                 <div className="w-[32%] h-[100px] sm:h-auto py-6 px-1 flex flex-col border-b border-gray-100 sm:px-11 sm:py-14 text-center sm:border-0 sm:border-r bg-[#3498DB] rounded-xl sm:min-w-[33%]">
                   <a
                     href=""
@@ -313,11 +313,11 @@ export default function UserPortal() {
                     </span>
                   </a>
                 </div>
-              </dl>
+              </div>
             </div>
           </section>
           {/* Card section */}
-          <section className="containerBox w-full card-section">
+          <section className="containerBox w-full card-section mt-20">
             <div className="flex items-center justify-between mb-6">
               <p className="text-xl text-dark font-semibold">
                 Top Professionals for Birthday Decorations
@@ -413,7 +413,7 @@ export default function UserPortal() {
 
                   <Link
                     className="max-w-xl w-full hover:bg-userTheme1 cursor-pointer transition-all delay-50 ease-in"
-                    href="/profile"
+                    href="/user-portal/product-detail"
                   >
                     <div className="group relative  pb-6 ">
                       <div className="flex relative pl-5">
@@ -429,7 +429,10 @@ export default function UserPortal() {
                           </div>
                         )}
                       </div>
-                      <div className="relative mt-4 flex items-center gap-x-3 pl-5">
+                      <Link
+                        className="relative mt-4 flex items-center gap-x-3 pl-5"
+                        href="/profile"
+                      >
                         <img
                           src={post.detail.imageUrl}
                           alt=""
@@ -441,7 +444,7 @@ export default function UserPortal() {
                             {post.detail.name}
                           </a>
                         </p>
-                      </div>
+                      </Link>
                       <div className="mt-3 flex items-center pl-5">
                         <div className="flex items-center">
                           {post.detail.rating && (
@@ -480,7 +483,7 @@ export default function UserPortal() {
                         {post.detail.desc}
                       </p>
                       <div className="pl-5">
-                        <Link href="/profile">
+                        <Link href="/user-portal/product-detail">
                           <button className="text-center border border-primaryColor text-primaryColor hover:bg-primaryColor hover:text-white px-5 py-2 rounded-lg w-[94%] transition-all ease-in delay-50">
                             CONTACT NOW
                           </button>

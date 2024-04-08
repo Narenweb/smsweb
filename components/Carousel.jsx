@@ -234,7 +234,7 @@ const Testimonials = () => {
         <h2 className="text-center text-[32px] font-bold mb-14 px-1">
           What Our Customers Are Saying responsiveness
         </h2>
-        <div className="mx-auto max-w-[87rem] px-6 lg:px-8 bg-white py-6 md:py-20">
+        <div className="user-portal mx-auto max-w-[87rem] px-6 lg:px-8 bg-white py-6 md:py-20">
           <Slider
             {...(isMobile ? mobileSliderSettings : desktopSliderSettings)}
           >
