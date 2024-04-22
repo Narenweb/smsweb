@@ -30,7 +30,26 @@ export default function UserLogin() {
   const [otpToken, setOtpToken] = useState("");
   const [storedPhoneNumber, setStoredPhoneNumber] = useState("");
   const { authData, setAuth } = useAuth();
+  const [accessToken, setAccessToken] = useState({});
 
+  const checkAuthentication = () => {
+    const isAuthenticated = Boolean(localStorage.getItem("accessToken"));
+    return isAuthenticated;
+  };
+  
+  useEffect(() => {
+    // Check if running on the client side
+    if (typeof window !== "undefined") {
+      const storedAccessToken = localStorage.getItem("accessToken");
+      setAccessToken(storedAccessToken);
+    }
+  }, []);
+  useEffect(() => {
+    const isAuthenticated = checkAuthentication();
+    if (isAuthenticated) {
+      router.push("/dashboard");
+    }
+  }, [accessToken]);
   useEffect(() => {
     if (accountError) {
       const timer = setTimeout(() => {

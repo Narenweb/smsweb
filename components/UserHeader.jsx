@@ -51,7 +51,33 @@ const UserHeader = ({
 
   // Check if the current pathname corresponds to the login page
   // const isLoginPage = pathname === '/';
+  const [accessToken, setAccessToken] = useState({});
+  const [authText, setAuthText] = useState("");
+  const [loading, setLoading] = useState(true);
+  const checkAuthentication = () => {
+    const isAuthenticated = Boolean(localStorage.getItem("accessToken"));
+    return isAuthenticated;
+  };
 
+  useEffect(() => {
+    // Check if running on the client side
+    if (typeof window !== "undefined") {
+      const storedAccessToken = localStorage.getItem("accessToken");
+      setAccessToken(storedAccessToken);
+    }
+  }, []);
+  useEffect(() => {
+    const isAuthenticated = checkAuthentication();
+    if (isAuthenticated) {
+      setAuthText("Logout");
+    } else {
+      setAuthText("Login");
+    }
+    setLoading(false);
+  }, [accessToken]);
+  if (loading) {
+    return null; 
+  }
   return (
     <header className={`w-full navbar-fixed`}>
       <div className="relative z-20 flex h-16 flex-shrink-0 border-b border-gray-200 bg-white shadow-sm">
@@ -87,7 +113,7 @@ const UserHeader = ({
                 </div>
                 <div className="absolute inset-y-0 right-0 flex items-center sm:static sm:inset-auto sm:pr-0">
                   <div className="sm:flex lg:flex-1 lg:justify-end lg:w-full">
-                    {isLoginPage && (
+                    {authText == "Login" && (
                       <div className="flex items-center">
                         <img
                           src="https://i.ibb.co/kSx3fkW/user.png"
@@ -104,22 +130,13 @@ const UserHeader = ({
                         </Link>
                       </div>
                     )}
-                    {isLoginPage ? (
-                      <Link
-                        href="/user/login"
-                        className="text-md leading-6 rounded-lg px-5 py-2 text-white bg-dark relative group text-base font-bold ml-3"
-                      >
-                        Login
-                      </Link>
-                    ) : (
-                      <Link
-                        href="/admin/login"
-                        onClick={logout}
-                        className="text-md leading-6 rounded-lg px-5 py-2 text-white bg-dark relative group text-base font-bold ml-3"
-                      >
-                        Logout
-                      </Link>
-                    )}
+                    <Link
+                      href="/user/login"
+                      onClick={logout}
+                      className="text-md leading-6 rounded-lg px-5 py-2 text-white bg-dark relative group text-base font-bold ml-3"
+                    >
+                      {authText}
+                    </Link>
                   </div>
                 </div>
               </div>

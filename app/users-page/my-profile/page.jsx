@@ -285,7 +285,7 @@ export default function Myprofile() {
                                 <AddUserIcon />
                                 <p className="text-2xl font-semibold text-center text-theme mt-3">
                                   {businessProfiles.length === 0
-                                    ? "+ Create New Profile"
+                                    ? "+ Create Profile"
                                     : "+ Add Profile "}
                                 </p>
                               </div>

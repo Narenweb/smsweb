@@ -171,7 +171,7 @@ export default function Myprofile() {
   return (
     <>
       <div className="flex h-full bg-userTheme">
-        <UserHeader isLoginPage value1={true} />
+        <UserHeader value1={true} />
 
         <div className="flex flex-1 flex-col overflow-hidden h-auto top-[80px] relative mb-10 sm:mb-20">
           <section className="flex containerBox mb-10">

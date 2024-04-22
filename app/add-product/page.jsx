@@ -1,15 +1,18 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
+import Modal from "@/components/Modal";
 import UserHeader from "@/components/UserHeader";
 import InputBox from "@/components/CustomInput";
 import Dropdown from "@/components/Dropdown";
 import UserFooter from "@/components/UserFooter";
 import config from "@/components/config";
 import { useRouter } from "next/navigation";
+import "react-image-crop/dist/ReactCrop.css";
 import { FaCheck, FaAngleDown, FaPlus } from "react-icons/fa";
 import { FiUpload, FiTrash2 } from "react-icons/fi";
-import { InfoIconfilled } from "../Assets/icons";
+import { InfoIconfilled, PencilIcon } from "../Assets/icons";
 import ReactCrop from "react-image-crop";
+import Profile from "@/components/Profile";
 // import "../Assets";
 export default function AddProduct() {
   const router = useRouter();
@@ -32,7 +35,7 @@ export default function AddProduct() {
     if (typeof window !== "undefined") {
       const storedAccessToken = localStorage.getItem("accessToken");
       const storedActiveSection =
-        parseInt(localStorage.getItem("activeSection")) || 1;
+        parseInt(localStorage.getItem("activeSection")) || 2;
 
       setAccessToken(storedAccessToken);
       setActiveSection(storedActiveSection);
@@ -60,6 +63,14 @@ export default function AddProduct() {
   const handleSectionClick = (index) => {
     // Handle click on pipeline section
     setActiveSection(index);
+  };
+
+  //modal section
+  const avatarUrl = useRef();
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const updateAvatar = (imgSrc) => {
+    avatarUrl.current = imgSrc;
   };
 
   const fetchBusinessLineNames = async () => {
@@ -180,6 +191,8 @@ export default function AddProduct() {
     setIsCategoryError(!isBusinessCategoryValid);
     const isBusinessKindValid = selectedKindOption !== null;
     setIsBusinessKindError(!isBusinessKindValid);
+    // const nextSection = activeSection + 1;
+    // setActiveSection(nextSection);
     if (true) {
       try {
         let apiUrl = `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile/${profileId}/product`;
@@ -360,8 +373,7 @@ export default function AddProduct() {
   };
 
   //dummy
-    const handleKindOptionClick = (selectedLabel) => {
-
+  const handleKindOptionClick = (selectedLabel) => {
     console.log("selectedOption", selectedLabel);
     const selectedOption = businessLineOptions.find(
       (option) => option.label === selectedLabel
@@ -1151,6 +1163,20 @@ export default function AddProduct() {
                   />
                 </div>
                 <div className="mt-10 flex justify-between w-[60%]">
+                  <Dropdown
+                    options={businessLineOptions}
+                    labelName="Business Type"
+                    placeholder="Select Business Type"
+                    id="business-type"
+                    ErrorMessage="Select any one Business Line"
+                    isError={isBusinessKindError}
+                    // onChange={handleOptionClick}
+                    defaultOption={selectedOption}
+                    onSelect={(option) => {
+                      console.log("Option in select:", option.label);
+                      handleOptionClick(option.label);
+                    }}
+                  />
                   <div className="flex relative">
                     <Dropdown
                       options={businessLineOptions}
@@ -1184,20 +1210,6 @@ export default function AddProduct() {
                       </div>
                     )}
                   </div>
-                  <Dropdown
-                    options={businessLineOptions}
-                    labelName="Business Type"
-                    placeholder="Select Business Type"
-                    id="business-type"
-                    ErrorMessage="Select any one Business Line"
-                    isError={isBusinessKindError}
-                    // onChange={handleOptionClick}
-                    defaultOption={selectedOption}
-                    onSelect={(option) => {
-                      console.log("Option in select:", option.label);
-                      handleOptionClick(option.label);
-                    }}
-                  />
                 </div>
                 {/* Second slide items */}
                 {/* <div className="mt-10 flex justify-between w-[60%]">
@@ -1286,19 +1298,27 @@ export default function AddProduct() {
                   activeSection === 2 ? "block" : "hidden"
                 }`}
               >
-                <p className="font-semibold text-2xl relative left-[220px]">
+                <p className="font-semibold text-2xl relative  text-center">
                   Media
                 </p>
-                <div className="flex w-[65%] mt-10 justify-center relative left-[220px] ">
-                  <div className="cover-photo-section">
-                    <div className="image-input hover:shadow-lg p-2 cursor-pointer w-[400px] h-[270px] border-2 border-dotted border-theme rounded-lg flex justify-center items-center flex-col">
-                      <input
-                        type="file"
-                        className="file-input cursor-pointer h-1/2"
-                        onChange={handleCoverPhotoChange}
-                        accept="image/jpeg, image/png"
-                        multiple
-                      />
+                <div
+                  className={`mt-10 grid gap-4 justify-center relative ${
+                    avatarUrl.current &&
+                    avatarUrl.current.length > 0 &&
+                    "grid-cols-3 "
+                  }`}
+                >
+                  <div className="cover-photo-section ">
+                    <div
+                      className="image-input hover:shadow-lg p-2 cursor-pointer w-[440px] h-[270px] border-2 border-dotted border-theme rounded-lg flex justify-center items-center flex-col "
+                      title="Change photo"
+                    >
+                      <button
+                        className="absolute w-[440px] h-[270px]"
+                        title="Change photo"
+                        onClick={() => setModalOpen(true)}
+                      ></button>
+
                       <FiUpload
                         size={38}
                         className="mx-auto w-full text-defaultTheme cursor-pointer"
@@ -1306,6 +1326,15 @@ export default function AddProduct() {
                       <p className="text-center px-3 mt-3 font-semibold cursor-pointer">
                         Click to Upload Cover photo or Drag and Drop Here
                       </p>
+                      {modalOpen && (
+                        <Modal
+                          updateAvatar={updateAvatar}
+                          closeModal={() => setModalOpen(false)}
+                          handleCoverPhotoChange={handleCoverPhotoChange}
+                          imageUrls={imageUrls}
+                          setImageUrls={setImageUrls}
+                        />
+                      )}
                     </div>
                     {hasLargeFile && (
                       <p className="text-red-500 pt-3 flex items-start">
@@ -1314,8 +1343,21 @@ export default function AddProduct() {
                       </p>
                     )}
                   </div>
-                </div>
-                <div className="grid grid-cols-3 gap-4 mt-10 justify-center">
+                  {avatarUrl.current && (
+                    <div className="relative">
+                      <FiTrash2
+                        size={24}
+                        className="absolute top-0 right-0 text-defaultTheme bg-white  cursor-pointer"
+                        onClick={() => handleDeleteCoverPhoto()}
+                      />
+                      <img
+                        src={avatarUrl.current}
+                        alt="Selected File"
+                        style={{ width: "500px", height: "270px" }}
+                        className="rounded-lg mb-1"
+                      />
+                    </div>
+                  )}
                   {imageUrls.map(
                     (url, index) =>
                       coverPhotos[index].size <= fileSizeLimit && (
@@ -1350,6 +1392,13 @@ export default function AddProduct() {
                       )
                   )}
                 </div>
+                {/* <input
+                        type="file"
+                        className="file-input cursor-pointer h-1/2"
+                        onChange={handleCoverPhotoChange}
+                        accept="image/jpeg, image/png"
+                        multiple
+                      /> */}
                 <div className="relative left-[220px]">
                   <button
                     className="bg-primaryColor text-white text-lg font-bold px-6 py-2 rounded-md relative mt-24 curser-pointer"

@@ -1,33 +1,33 @@
-"use client"
-import { Fragment, useState } from 'react';
-import Link from 'next/link';
-import { Disclosure, Transition, Dialog } from '@headlessui/react'
+"use client";
+import { Fragment, useState } from "react";
+import Link from "next/link";
+import { Disclosure, Transition, Dialog } from "@headlessui/react";
 import {
   XMarkIcon,
   Bars3BottomLeftIcon,
   Squares2X2Icon as Squares2X2IconOutline,
-} from '@heroicons/react/24/outline'
+} from "@heroicons/react/24/outline";
 import {
   CogIcon,
   HomeIcon,
   PhotoIcon,
   UserGroupIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
 const navigation = [
-  { name: 'Home', href: '#', icon: HomeIcon, current: false },
-  { name: 'Dashboard', href: '#', icon: Squares2X2IconOutline, current: false },
-  { name: 'Business Config', href: '#', icon: PhotoIcon, current: true },
-  { name: 'User Setting', href: '#', icon: UserGroupIcon, current: false },
-  { name: 'Partner Setting', href: '#', icon: CogIcon, current: false },
-]
+  { name: "Home", href: "#", icon: HomeIcon, current: false },
+  { name: "Dashboard", href: "#", icon: Squares2X2IconOutline, current: false },
+  { name: "Business Config", href: "#", icon: PhotoIcon, current: true },
+  { name: "User Setting", href: "#", icon: UserGroupIcon, current: false },
+  { name: "Partner Setting", href: "#", icon: CogIcon, current: false },
+];
 function classNames(...classes) {
-  return classes.filter(Boolean).join(' ')
+  return classes.filter(Boolean).join(" ");
 }
 const logout = () => {
-  localStorage.removeItem('accessToken');
+  localStorage.removeItem("accessToken");
 };
 const Header = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return (
     <header className="w-full">
       <div className="relative  flex h-16 flex-shrink-0 border-b border-gray-200 bg-white shadow-sm">
@@ -44,7 +44,6 @@ const Header = () => {
             <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8 w-full">
               <div className="relative flex h-16 justify-between">
                 <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-center">
-
                   <div className="hidden sm:ml-6 sm:flex sm:space-x-8 sm:justify-center sm:w-full">
                     <a
                       href="/space"
@@ -61,24 +60,33 @@ const Header = () => {
                   </div>
                 </div>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-
                   <div className="hidden sm:flex lg:flex-1 lg:justify-end lg:w-full">
-                    <Link href="/admin/login" className="text-md font-semibold leading-6 text-gray-900 relative group" onClick={logout}>
+                    <Link
+                      href="/admin/login"
+                      className="text-md font-semibold leading-6 text-gray-900 relative group"
+                      onClick={logout}
+                    >
                       Log out
-                      <span aria-hidden="true" className="transition-transform transform inline-block ml-1 group-hover:translate-x-1">&rarr;</span>
+                      <span
+                        aria-hidden="true"
+                        className="transition-transform transform inline-block ml-1 group-hover:translate-x-1"
+                      >
+                        &rarr;
+                      </span>
                     </Link>
                   </div>
-
-
                 </div>
               </div>
             </div>
           </>
         </Disclosure>
-
       </div>
       <Transition.Root show={mobileMenuOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-40 md:hidden" onClose={setMobileMenuOpen}>
+        <Dialog
+          as="div"
+          className="relative z-40 md:hidden"
+          onClose={setMobileMenuOpen}
+        >
           <Transition.Child
             as={Fragment}
             enter="transition-opacity ease-linear duration-300"
@@ -117,7 +125,10 @@ const Header = () => {
                       className="flex h-12 w-12 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-white"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <XMarkIcon className="h-6 w-6 text-white" aria-hidden="true" />
+                      <XMarkIcon
+                        className="h-6 w-6 text-white"
+                        aria-hidden="true"
+                      />
                       <span className="sr-only">Close sidebar</span>
                     </button>
                   </div>
@@ -138,16 +149,18 @@ const Header = () => {
                           href={item.href}
                           className={classNames(
                             item.current
-                              ? 'bg-darkTheme text-white'
-                              : 'text-indigo-100 hover:bg-darkTheme hover:text-white',
-                            'group flex items-center rounded-md py-2 px-3 text-sm font-medium'
+                              ? "bg-darkTheme text-white"
+                              : "text-indigo-100 hover:bg-darkTheme hover:text-white",
+                            "group flex items-center rounded-md py-2 px-3 text-sm font-medium"
                           )}
-                          aria-current={item.current ? 'page' : undefined}
+                          aria-current={item.current ? "page" : undefined}
                         >
                           <item.icon
                             className={classNames(
-                              item.current ? 'text-white' : 'text-lightTheme group-hover:text-white',
-                              'mr-3 h-6 w-6'
+                              item.current
+                                ? "text-white"
+                                : "text-lightTheme group-hover:text-white",
+                              "mr-3 h-6 w-6"
                             )}
                             aria-hidden="true"
                           />

@@ -26,7 +26,28 @@ const logout = () => {
 const CustomizedHeader = ({ value }) => {
   console.log("value", value);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [accessToken, setAccessToken] = useState({});
+  const [authText, setAuthText] = useState("");
+  const checkAuthentication = () => {
+    const isAuthenticated = Boolean(localStorage.getItem("accessToken"));
+    return isAuthenticated;
+  };
 
+  useEffect(() => {
+    // Check if running on the client side
+    if (typeof window !== "undefined") {
+      const storedAccessToken = localStorage.getItem("accessToken");
+      setAccessToken(storedAccessToken);
+    }
+  }, []);
+  useEffect(() => {
+    const isAuthenticated = checkAuthentication();
+    if (isAuthenticated) {
+      setAuthText("Logout");
+    } else {
+      setAuthText("Login");
+    }
+  }, [accessToken]);
   return (
     <header className={`w-full`}>
       <div className="relative flex h-16 flex-shrink-0 border-b border-gray-200 bg-white shadow-sm">
@@ -65,6 +86,15 @@ const CustomizedHeader = ({ value }) => {
                     </a>
                   </div>
                 </div>
+                {authText && (
+                  <Link
+                    href="/user/login"
+                    onClick={logout}
+                    className="text-md leading-6 rounded-lg px-5 py-2 text-white bg-dark relative group text-base font-bold ml-3"
+                  >
+                    {authText}
+                  </Link>
+                )}
               </div>
             </div>
           </>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import UserHeader from "@/components/UserHeader";
 import InputBox from "@/components/CustomInput";
@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import { FaCheck, FaAngleDown, FaPlus } from "react-icons/fa";
 import { FiUpload, FiTrash2, FiCloudLightning } from "react-icons/fi";
 import { EditIcon } from "../Assets/icons";
+import Modal from "@/components/Modal";
+import "react-image-crop/dist/ReactCrop.css";
 // import "../Assets";
 export default function CreateProfile() {
   const router = useRouter();
@@ -691,6 +693,13 @@ export default function CreateProfile() {
   };
 
   //Third section Media
+  //modal section
+  const avatarUrl = useRef();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [imageUrls, setImageUrls] = useState([]);
+  const updateAvatar = (imgSrc) => {
+    avatarUrl.current = imgSrc;
+  };
   const [coverPhoto, setCoverPhoto] = useState(null);
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
@@ -712,6 +721,7 @@ export default function CreateProfile() {
   const handleDeleteCoverPhoto = () => {
     setCoverPhoto(null);
     setImageUrl(null);
+    avatarUrl.current = null;
   };
   const handleDeleteProfilePhoto = () => {
     setProfilePhoto(null);
@@ -783,6 +793,7 @@ export default function CreateProfile() {
       );
       const data = await response.json();
       const geoLocations = data.serviceResponse.geoLocationList;
+      geoLocations.sort((a, b) => a.name.localeCompare(b.name));
       return geoLocations;
     } catch (error) {
       console.error("Error fetching geo locations:", error);
@@ -850,7 +861,10 @@ export default function CreateProfile() {
           data.serviceResponse &&
           data.serviceResponse.geoLocationList
         ) {
-          setDistrictOptions(data.serviceResponse.geoLocationList);
+          const newDistrictOptions = data.serviceResponse.geoLocationList;
+          newDistrictOptions.sort((a, b) => a.name.localeCompare(b.name));
+
+          setDistrictOptions(newDistrictOptions);
           setAllSelectedDistrict((prevOptions) => {
             // Assuming data.serviceResponse.geoLocationList is an array of options
             const newOptions = data.serviceResponse.geoLocationList;
@@ -963,7 +977,9 @@ export default function CreateProfile() {
           data.serviceResponse &&
           data.serviceResponse.geoLocationList
         ) {
-          setPlaceOptions(data.serviceResponse.geoLocationList);
+          const newPlaceOptions = data.serviceResponse.geoLocationList;
+          newPlaceOptions.sort((a, b) => a.name.localeCompare(b.name));
+          setPlaceOptions(newPlaceOptions);
           setIsThirdBoxVisible(true);
         }
       } catch (error) {
@@ -1223,7 +1239,7 @@ export default function CreateProfile() {
   //     businessMappings.push({ bkId, bcId });
   //   });
   // });
-  const handleValidationFour = async () => {
+  const handleValidationFour1 = async () => {
     const profileId = await getAllPartner();
 
     // Create an array to hold the selected service areas
@@ -1240,17 +1256,15 @@ export default function CreateProfile() {
     });
 
     console.log("businessKindId", businessKindId);
-    const bussinessKindObjects = { bkId: businessKindId, bcId: businessBcId };
 
     selectBusinessKindOptions.forEach((bkId) => {
       const correspondingBcIds = selectKindOptionsChange.map(
         (option) => option
       );
       correspondingBcIds.forEach((bcId) => {
-        businessMappings.push({ bkId, bcId: bcId || "" });
+        businessMappings.push({ bkId, bcId });
       });
     });
-
     const response = await fetch(
       `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile/${profileId}`,
       {
@@ -1261,6 +1275,60 @@ export default function CreateProfile() {
         },
         body: JSON.stringify({
           serviceAreas: serviceAreas,
+          businessMappings: businessMappings,
+        }),
+      }
+    );
+
+    if (response.ok) {
+      window.scrollTo(350, 350);
+      const nextSection = activeSection + 1;
+      setActiveSection(nextSection);
+    }
+  };
+
+  const handleValidationFour = async () => {
+    const profileId = await getAllPartner();
+
+    // Create an array to hold the selected service areas
+    const serviceAreas = [];
+    const businessMappings = [];
+
+    // Iterate over selected districts to construct service areas objects
+    selectPlaceOptions.forEach((option) => {
+      serviceAreas.push({
+        id: option.id,
+        locationId: option.locationId,
+        name: option.name,
+      });
+    });
+
+    // Iterate over selected business kinds and their corresponding selected options
+    selectBusinessKindOptions.forEach((bkId) => {
+      selectKindOptionsChange.forEach((bcId) => {
+        businessMappings.push({ bkId, bcId });
+      });
+    });
+    //   selectBusinessKindOptions.forEach((bkId) => {
+    //     // Filter selectKindOptionsChange to get only the relevant bcIds for this bkId
+    //     const relevantBcIds = selectKindOptionsChange.filter((option) => option.bkId === bkId);
+
+    //     // Add each combination of bkId and bcId to businessMappings
+    //     relevantBcIds.forEach((bcId) => {
+    //         businessMappings.push({ bkId, bcId });
+    //     });
+    // });
+
+    const response = await fetch(
+      `${config.host}/tenant/admin/v2/partner/${accountId}/business/profile/${profileId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          // serviceAreas: serviceAreas,
           businessMappings: businessMappings,
         }),
       }
@@ -1656,22 +1724,53 @@ export default function CreateProfile() {
                     <div className="cover-photo-section">
                       <p className="mb-4 font-bold text-lg">Cover Photo</p>
                       <div className="cover-photo-section">
-                        <div className="file-input-label hover:shadow-lg">
-                          <input
+                        {!avatarUrl.current && (
+                          <div className="file-input-label hover:shadow-lg">
+                            {/* <input
                             type="file"
                             className="file-input cursor-pointer h-1/2"
                             onChange={handleCoverPhotoChange}
                             accept="image/jpeg, image/png"
                             multiple
-                          />
-                          <FiUpload
-                            size={38}
-                            className="mt-6 mx-auto w-full text-defaultTheme pointer"
-                          />
-                          <p className="text-center px-3 mt-3 font-semibold cursor-pointer">
-                            Click to Upload Cover photo or Drag and Drop Here
-                          </p>
-                        </div>
+                          /> */}
+                            <button
+                              className="absolute w-[380px] h-[270px]"
+                              title="Change photo"
+                              onClick={() => setModalOpen(true)}
+                            ></button>
+                            <FiUpload
+                              size={38}
+                              className="mt-6 mx-auto w-full text-defaultTheme pointer"
+                            />
+                            <p className="text-center px-3 mt-3 font-semibold cursor-pointer">
+                              Click to Upload Cover photo or Drag and Drop Here
+                            </p>
+                            {modalOpen && (
+                              <Modal
+                                updateAvatar={updateAvatar}
+                                closeModal={() => setModalOpen(false)}
+                                handleCoverPhotoChange={handleCoverPhotoChange}
+                                imageUrls={imageUrls}
+                                setImageUrls={setImageUrls}
+                              />
+                            )}
+                          </div>
+                        )}
+                        {avatarUrl.current && (
+                          <div className="relative mt-5">
+                            <FiTrash2
+                              size={24}
+                              className="absolute top-0 right-0 text-defaultTheme bg-white  cursor-pointer"
+                              onClick={handleDeleteCoverPhoto}
+                            />
+                            <img
+                              src={avatarUrl.current}
+                              alt="Selected File"
+                              style={{ width: "400px", height: "270px" }}
+                              className="rounded-lg mb-1"
+                            />
+                          </div>
+                        )}
                         {imageUrl && coverPhoto.size <= fileSizeLimit && (
                           <div className="mr-4 mt-10 w-[400px] h-[270px] relative">
                             {coverPhoto && (
